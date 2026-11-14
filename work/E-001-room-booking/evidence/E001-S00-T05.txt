@@ -1,0 +1,75 @@
+$ pnpm tsc --noEmit
+exit: 0
+
+
+$ pnpm lint
+exit: 0
+$ eslint .
+
+$ pnpm vitest run tests/unit/lib
+exit: 0
+
+ RUN  v4.1.12 /Users/kavinpasupathy/Documents/cowork
+
+
+ Test Files  6 passed (6)
+      Tests  84 passed (84)
+   Start at  17:43:40
+   Duration  610ms (transform 148ms, setup 0ms, import 763ms, tests 90ms, environment 0ms)
+
+$ pnpm vitest run tests/integration/house
+exit: 0
+
+ RUN  v4.1.12 /Users/kavinpasupathy/Documents/cowork
+
+
+ Test Files  3 passed (3)
+      Tests  26 passed (26)
+   Start at  17:43:40
+   Duration  160ms (transform 45ms, setup 0ms, import 147ms, tests 22ms, environment 0ms)
+
+$ DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm vitest run tests/integration/contracts
+exit: 0
+
+ RUN  v4.1.12 /Users/kavinpasupathy/Documents/cowork
+
+
+ Test Files  1 passed (1)
+      Tests  15 passed (15)
+   Start at  17:43:41
+   Duration  156ms (transform 13ms, setup 0ms, import 38ms, tests 37ms, environment 0ms)
+
+$ bash scripts/ci/check-no-console.sh
+exit: 0
+PASS check-no-console: no console calls outside logger
+
+$ bash scripts/ci/check-test-tree.sh
+exit: 0
+PASS check-test-tree: no test files under src/
+
+$ env -u DATABASE_URL_MIGRATOR pnpm vitest run tests/integration/contracts
+exit: 1
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/integration/contracts/migration.test.ts > Database Migration & Raw-SQL Schema Verification > Live database validation (requires DATABASE_URL_MIGRATOR)
+Error: DATABASE_URL_MIGRATOR is not set. Start the test database and run: DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm vitest run tests/integration/contracts
+ ❯ tests/integration/contracts/migration.test.ts:76:15
+     74|       const migratorUrl = process.env.DATABASE_URL_MIGRATOR;
+     75|       if (!migratorUrl) {
+     76|         throw new Error(
+       |               ^
+     77|           'DATABASE_URL_MIGRATOR is not set. Start the test database a…
+     78|         );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  7 passed | 8 skipped (15)
+   Start at  17:43:41
+   Duration  101ms (transform 10ms, setup 0ms, import 21ms, tests 3ms, environment 0ms)
+
+## Files changed
+tests/integration/contracts/migration.test.ts
+vitest.config.ts

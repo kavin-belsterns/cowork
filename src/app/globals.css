@@ -1,0 +1,181 @@
+/*
+  Purpose: Tailwind v4 design tokens. The single source for colour, type, radius, shadow and motion.
+  Rules: standards/ui.md. No raw colour, size, radius or shadow in components. Token utilities only.
+  Breakpoints: 375, 768, 1280.
+  Contrast: WCAG 2.2 AA (text >= 4.5:1, UI components and focus ring >= 3:1).
+*/
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* 1. Reset the default palette, type scale, radius, shadow and breakpoints so only the tokens below exist. */
+@theme {
+  --color-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --breakpoint-*: initial;
+
+  /* Breakpoints: 375, 768, 1280 */
+  --breakpoint-sm: 375px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1280px;
+
+  /* Type scale: 12, 14, 16, 18, 24, 32, 40 px. Line height 1.5 body, 1.2 to 1.3 headings. */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.5;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.5;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.5;
+  --text-xl: 1.5rem;
+  --text-xl--line-height: 1.3;
+  --text-2xl: 2rem;
+  --text-2xl--line-height: 1.2;
+  --text-3xl: 2.5rem;
+  --text-3xl--line-height: 1.2;
+
+  /* Spacing: 4px base (--spacing: 0.25rem). */
+  --spacing: 0.25rem;
+
+  /* Radius roles: sm inputs, md buttons, lg cards and dialogs. */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+
+  /* Shadow: borders first. Shadows for overlays only. */
+  --shadow-sm: 0 1px 2px 0 oklch(0 0 0 / 0.06);
+  --shadow-md: 0 4px 8px -2px oklch(0 0 0 / 0.1);
+  --shadow-lg: 0 12px 24px -6px oklch(0 0 0 / 0.16);
+}
+
+/* 2. Map semantic variables to utilities. */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+
+  /* Status tokens */
+  --color-status-free: var(--status-free);
+  --color-status-free-foreground: var(--status-free-foreground);
+  --color-status-booked: var(--status-booked);
+  --color-status-booked-foreground: var(--status-booked-foreground);
+  --color-status-expected: var(--status-expected);
+  --color-status-expected-foreground: var(--status-expected-foreground);
+  --color-status-checked-in: var(--status-checked-in);
+  --color-status-checked-in-foreground: var(--status-checked-in-foreground);
+  --color-status-not-checked-out: var(--status-not-checked-out);
+  --color-status-not-checked-out-foreground: var(--status-not-checked-out-foreground);
+
+  /* Profile / shadcn shorthand aliases */
+  --color-bg: var(--background);
+  --color-fg: var(--foreground);
+  --color-muted-fg: var(--muted-foreground);
+  --color-accent-fg: var(--accent-foreground);
+  --color-destructive-fg: var(--destructive-foreground);
+
+  /* Font from next/font in the root layout */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* 3. Raw values. Pairs meet WCAG 2.2 AA (text >= 4.5:1, UI/border/ring >= 3:1). */
+:root {
+  --background: oklch(0.99 0.003 260);
+  --foreground: oklch(0.21 0.02 260);
+  --muted: oklch(0.96 0.006 260);
+  --muted-foreground: oklch(0.35 0.02 260);
+  --primary: oklch(0.21 0.02 260);
+  --primary-foreground: oklch(0.99 0.003 260);
+  --accent: oklch(0.92 0.01 260);
+  --accent-foreground: oklch(0.21 0.02 260);
+  --destructive: oklch(0.48 0.18 27);
+  --destructive-foreground: oklch(0.99 0.003 260);
+  --border: oklch(0.55 0.02 260);
+  --ring: oklch(0.45 0.17 262);
+
+  /* Status tokens (always paired with text labels) */
+  --status-free: oklch(0.95 0.05 145);
+  --status-free-foreground: oklch(0.3 0.1 145);
+  --status-booked: oklch(0.94 0.01 260);
+  --status-booked-foreground: oklch(0.25 0.02 260);
+  --status-expected: oklch(0.93 0.05 240);
+  --status-expected-foreground: oklch(0.3 0.12 245);
+  --status-checked-in: oklch(0.94 0.06 175);
+  --status-checked-in-foreground: oklch(0.3 0.1 175);
+  --status-not-checked-out: oklch(0.95 0.06 85);
+  --status-not-checked-out-foreground: oklch(0.35 0.12 65);
+
+  /* Motion tokens: 150ms hover, 200ms enter, 300ms max */
+  --motion-hover: 150ms;
+  --motion-enter: 200ms;
+  --motion-max: 300ms;
+}
+
+.dark {
+  --background: oklch(0.15 0.015 260);
+  --foreground: oklch(0.98 0.005 260);
+  --muted: oklch(0.22 0.02 260);
+  --muted-foreground: oklch(0.78 0.02 260);
+  --primary: oklch(0.98 0.005 260);
+  --primary-foreground: oklch(0.15 0.015 260);
+  --accent: oklch(0.25 0.02 260);
+  --accent-foreground: oklch(0.98 0.005 260);
+  --destructive: oklch(0.45 0.18 25);
+  --destructive-foreground: oklch(0.98 0.005 260);
+  --border: oklch(0.52 0.02 260);
+  --ring: oklch(0.7 0.14 262);
+
+  /* Status tokens (dark) */
+  --status-free: oklch(0.28 0.08 145);
+  --status-free-foreground: oklch(0.92 0.05 145);
+  --status-booked: oklch(0.25 0.02 260);
+  --status-booked-foreground: oklch(0.92 0.01 260);
+  --status-expected: oklch(0.28 0.09 245);
+  --status-expected-foreground: oklch(0.9 0.06 240);
+  --status-checked-in: oklch(0.28 0.08 175);
+  --status-checked-in-foreground: oklch(0.92 0.06 175);
+  --status-not-checked-out: oklch(0.32 0.1 65);
+  --status-not-checked-out-foreground: oklch(0.94 0.06 85);
+}
+
+@layer base {
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+  }
+
+  /* Visible focus on every control (WCAG 2.2 AA). 2px ring, >= 3:1 contrast against background */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+/* 4. Reduced motion: the user setting wins over the motion tokens */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-hover: 0ms;
+    --motion-enter: 0ms;
+    --motion-max: 0ms;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

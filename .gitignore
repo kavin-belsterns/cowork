@@ -1,0 +1,20 @@
+work/.active-task
+
+# dependencies and build output
+node_modules/
+.next/
+out/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+
+# Prisma Client output (made by prisma generate)
+generated/
+
+# local environment. Only .env.example is tracked.
+.env
+.env.*
+!.env.example
+
+.DS_Store

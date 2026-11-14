@@ -1,0 +1,114 @@
+# Purpose: story PR gate. Repo checks, typecheck, lint, Vitest, Playwright ui and e2e against Postgres, report upload.
+# Rules: standards/testing.md, standards/versions.md. Node comes from .nvmrc. Actions are pinned by major tag.
+# UNVERIFIED: the major tags below (checkout, pnpm/action-setup, setup-node, upload-artifact). No source in the reports. Check the latest major of each.
+# Package manager: pnpm only (decision 19). pnpm/action-setup reads the pnpm version from the packageManager field in package.json.
+# Check scripts live in the repo at scripts/ci/ (copied from the plugin profiles/nextjs/ci/ by eng-intake).
+# UNVERIFIED: postgres image tag. The I report says use Postgres 18.x. Check the tag exists on Docker Hub.
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          # app_owner is the first (super) user, so it owns the schema like the real app_owner.
+          # The T-02 migration creates the app_web and app_worker roles. The Database step below sets their test passwords.
+          POSTGRES_USER: app_owner
+          POSTGRES_PASSWORD: app_owner
+          POSTGRES_DB: app_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U app_owner -d app_test"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      CI: "true"
+      NODE_ENV: test
+      # Throwaway CI container. Test values only.
+      DATABASE_URL_WEB: postgresql://app_web:app_web@localhost:5432/app_test
+      DATABASE_URL_WORKER: postgresql://app_worker:app_worker@localhost:5432/app_test
+      DATABASE_URL_MIGRATOR: postgresql://app_owner:app_owner@localhost:5432/app_test
+      APP_ORIGIN: http://localhost:3000
+      LOG_LEVEL: error
+      BRANCH: ${{ github.head_ref || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      # Story and task branches need a signed design. Design only branches (no S id) skip this.
+      - name: Find epic folder from branch name
+        id: epic
+        run: |
+          dir=""
+          if echo "$BRANCH" | grep -Eq 'E[0-9]{3}-S[0-9]{2}'; then
+            n=$(echo "$BRANCH" | grep -oE 'E[0-9]{3}' | head -n1 | cut -c2-)
+            dir=$(ls -d work/E-"$n"-* 2>/dev/null | head -n1 || true)
+          fi
+          echo "dir=$dir" >> "$GITHUB_OUTPUT"
+
+      - name: Repo checks
+        run: bash scripts/ci/run-all.sh ${{ steps.epic.outputs.dir }}
+      - name: AC coverage (warning only, enforced at release)
+        run: bash scripts/ci/check-ac-coverage.sh
+        continue-on-error: true
+
+      - run: pnpm install --frozen-lockfile
+      - name: Prisma Client
+        run: pnpm exec prisma generate --generator client
+      - run: pnpm run typecheck
+      - run: pnpm run lint
+      - name: Rules docs are up to date
+        run: |
+          node scripts/gen-rules-doc.ts --strict
+          test -z "$(git status --porcelain docs/rules)"
+      - name: Database
+        run: |
+          pnpm exec prisma migrate deploy
+          psql "$DATABASE_URL_MIGRATOR" -c "ALTER ROLE app_web PASSWORD 'app_web'" -c "ALTER ROLE app_worker PASSWORD 'app_worker'"
+          pnpm exec prisma db seed
+      - name: Vitest unit and integration
+        run: pnpm exec vitest run
+      # Playwright starts the app through webServer and waits for a non-error answer on "/".
+      # Before any page exists (S-00) "/" is 404, so a run with no specs would time out.
+      # Each step runs only when its spec files exist; the first story that adds specs turns it on.
+      - name: Find Playwright specs
+        id: specs
+        run: |
+          ui=$(find tests/ui -name '*.spec.ts' 2>/dev/null | wc -l | tr -d ' ')
+          e2e=$(find tests/e2e -name '*.spec.ts' 2>/dev/null | wc -l | tr -d ' ')
+          echo "ui=$ui" >> "$GITHUB_OUTPUT"
+          echo "e2e=$e2e" >> "$GITHUB_OUTPUT"
+          echo "ui specs: $ui, e2e specs: $e2e"
+      - if: steps.specs.outputs.ui != '0' || steps.specs.outputs.e2e != '0'
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Playwright ui (375, 768, 1280)
+        if: steps.specs.outputs.ui != '0'
+        run: pnpm exec playwright test --project=ui-375 --project=ui-768 --project=ui-1280
+      - name: Playwright e2e
+        if: steps.specs.outputs.e2e != '0'
+        run: pnpm exec playwright test --project=e2e
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+          if-no-files-found: ignore

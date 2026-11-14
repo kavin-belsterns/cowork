@@ -1,0 +1,144 @@
+# Story Evidence: E-001/S-00 Contracts
+
+Re-run by the lead on 2026-11-14 after the story review fixes (T-04, T-05). Test DB e001-testdb up. Reset run under the user's consent for e001_test.
+
+```
+$ pnpm install --frozen-lockfile
+exit: 0
+✓ Lockfile passes supply-chain policies (verified 3m ago)
+Lockfile is up to date, resolution step is skipped
+Done in 21ms using pnpm v12.18.0
+```
+
+```
+$ pnpm tsc --noEmit
+exit: 0
+
+```
+
+```
+$ pnpm lint
+exit: 0
+$ eslint .
+```
+
+```
+$ pnpm prisma validate
+exit: 0
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+The schema at prisma/schema.prisma is valid 🚀
+```
+
+```
+$ DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm prisma migrate reset --force
+exit: 0
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "e001_test", schema "public" at "127.0.0.1:5434"
+
+Applying migration `20261114093324_e001_init`
+
+Database reset successful
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20261114093324_e001_init/
+    └─ migration.sql
+```
+
+```
+$ DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm prisma db seed
+exit: 0
+Loaded Prisma config from prisma.config.ts.
+
+Running seed command `tsx prisma/seed.ts` ...
+seed ok: 2 offices, 8 rooms, 10 users, 8 bookings, 16 visits
+
+🌱  The seed command has been executed.
+```
+
+```
+$ bash scripts/ci/check-fk-index.sh
+exit: 0
+PASS check-fk-index: every foreign key has an index
+```
+
+```
+$ bash scripts/ci/check-versions.sh
+exit: 0
+PASS check-versions: all dependencies pinned exact, pnpm-lock.yaml present
+```
+
+```
+$ DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm vitest run tests/unit/contracts tests/unit/lib tests/integration/contracts tests/integration/house
+exit: 0
+
+ RUN  v4.1.12 /Users/kavinpasupathy/Documents/cowork
+
+
+ Test Files  23 passed (23)
+      Tests  930 passed (930)
+   Start at  17:44:15
+   Duration  1.02s (transform 453ms, setup 0ms, import 2.11s, tests 496ms, environment 2ms)
+```
+
+```
+$ pnpm docs:openapi && git diff --exit-code docs/api/openapi.yaml
+exit: 0
+$ tsx scripts/gen-openapi.ts
+Wrote docs/api/openapi.yaml
+```
+
+```
+$ APP_ORIGIN=http://localhost:3000 pnpm build
+exit: 0
+  [90m 6 |[0m ...[36mt[0m [36mconst[0m onRequestError: [33mInstrumentation[0m.onRequestError = [36masync[0m (error, request, context...
+  [90m 7 |[0m ...[90mThe logger writes to stdout. Edge has no stdout, so skip there.[0m
+[33m[1m>[0m [90m 8 |[0m ...([36mtypeof[0m process === [32m'undefined'[0m || !process.stdout) [36mreturn[0m;
+  [90m   |[0m                                        [33m[1m^^^^^^^^^^^^^^[0m
+  [90m 9 |[0m ...[36mst[0m { logger } = [36mawait[0m [36mimport[0m([32m'@/lib/logger'[0m);
+  [90m10 |[0m ...[36mst[0m header = request.headers[[32m'x-request-id'[0m];
+  [90m11 |[0m ...[36mst[0m requestId = ([33mArray[0m.isArray(header) ? header[[35m0[0m] : header) ?? [32m'unknown'[0m;
+
+Ecmascript file had an error
+
+
+  Finalizing page optimization ...
+
+
+Route (pages)
+─ ○ /404
+
+ƒ Proxy (Middleware)
+
+○  (Static)  prerendered as static content
+```
+
+```
+$ bash scripts/ci/check-test-tree.sh
+exit: 0
+PASS check-test-tree: no test files under src/
+```
+
+```
+$ bash scripts/ci/check-no-console.sh
+exit: 0
+PASS check-no-console: no console calls outside logger
+```
+
+```
+$ bash scripts/ci/check-dashes.sh
+exit: 0
+PASS check-dashes: no em or en dashes in docs/ and work/
+```
+
+```
+$ POSTGRES_USER=x POSTGRES_PASSWORD=x POSTGRES_DB=x DATABASE_URL_WEB=postgresql://x@db/x APP_ORIGIN=https://x.example docker compose config -q
+exit: 0
+
+```
+

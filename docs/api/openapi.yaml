@@ -1,0 +1,31 @@
+openapi: "3.1.0"
+info:
+  title: "Room booking API"
+  version: "1.0.0"
+  description: "Public HTTP routes only. Pages use server actions, which are not listed here."
+components:
+  schemas:
+    HealthResponse:
+      type: "object"
+      properties:
+        status:
+          type: "string"
+          enum:
+            - "ok"
+      required:
+        - "status"
+      additionalProperties: false
+  parameters: {}
+paths:
+  /api/health:
+    get:
+      summary: "Health check"
+      description: "Returns ok when the web process is up. No sign-in needed."
+      responses:
+        200:
+          description: "The service is up."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+webhooks: {}

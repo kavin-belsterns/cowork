@@ -1,0 +1,48 @@
+# Purpose: local and client-host stack. db and web only. The worker service arrives with S-12.
+# Rules: design.md HLD. Postgres is not published except 127.0.0.1:5433 for local tests. web joins the proxy network.
+# No secret values here. Set them in the environment or in a local .env file (names are in .env.example).
+name: room-booking
+
+services:
+  db:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - data
+
+  web:
+    build: .
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL_WEB: ${DATABASE_URL_WEB:?set DATABASE_URL_WEB}
+      APP_ORIGIN: ${APP_ORIGIN:?set APP_ORIGIN}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "3000"
+    networks:
+      - data
+      - proxy
+
+volumes:
+  db-data:
+
+networks:
+  data:
+  proxy:

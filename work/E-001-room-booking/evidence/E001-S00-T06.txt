@@ -1,0 +1,31 @@
+$ pnpm docs:openapi
+exit: 0
+$ tsx scripts/gen-openapi.ts
+Wrote docs/api/openapi.yaml
+
+$ pnpm docs:erd
+exit: 0
+$ prisma generate --generator markdown
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+
+✔ Generated prisma-markdown (4.0.0) to ./docs/db/erd.md in 8ms
+
+$ bash scripts/ci/check-dashes.sh
+exit: 0
+PASS check-dashes: no em or en dashes in docs/ and work/
+
+$ bash scripts/ci/check-no-console.sh
+exit: 0
+PASS check-no-console: no console calls outside logger
+
+$ bash scripts/ci/check-test-tree.sh
+exit: 0
+PASS check-test-tree: no test files under src/
+
+## Files changed
+docs/api/openapi.yaml
+docs/db/erd.md
+docs/ui/interface-rules.md
+work/E-001-room-booking/evidence/E001-S00-T06.txt

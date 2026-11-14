@@ -1,0 +1,381 @@
+// Purpose: the E-001 schema. Written by S-00 only. Names follow Prisma 7 (prisma.config.ts holds the connection and the seed command).
+// Rules: standards/data.md. Tables plural snake_case, columns snake_case, uuid v7 ids made by Prisma Client in the app (no DB default).
+// Raw SQL objects Prisma cannot declare are marked with /// comments that name T-02. The T-02 migration adds each one.
+// Audit columns: created_at and updated_at on every table that users edit. System tables keep only what they use:
+//   sessions, sign_in_attempts, audit_events, idempotency_keys and job_runs have no created_by (no human author).
+//   audit_events has `at` instead of created_at and no updated_at (append only, design.md Data design).
+// created_by is a plain uuid with no FK: null means the seed, the break-glass script or the worker wrote the row.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+// Writes docs/db/erd.md. Run with: pnpm docs:erd
+generator markdown {
+  provider = "prisma-markdown"
+  output   = "../docs/db/erd.md"
+  title    = "E-001 room booking: data model"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  platform_admin
+  office_admin
+  employee
+  receptionist
+
+  @@map("role")
+}
+
+enum BookingStatus {
+  confirmed
+  cancelled
+
+  @@map("booking_status")
+}
+
+enum SeriesPattern {
+  daily
+  weekly
+
+  @@map("series_pattern")
+}
+
+enum VisitStatus {
+  expected
+  checked_in
+  checked_out
+  cancelled
+
+  @@map("visit_status")
+}
+
+// Plain verbs shown in the activity history (S-10).
+enum AuditAction {
+  created
+  changed
+  cancelled
+  removed
+  deactivated
+  checked_in
+  checked_out
+  anonymised
+  failed
+
+  @@map("audit_action")
+}
+
+enum AuditEntityType {
+  office
+  room
+  user
+  booking
+  series
+  visit
+  import
+  job
+
+  @@map("audit_entity_type")
+}
+
+enum IdempotencyStatus {
+  running
+  done
+
+  @@map("idempotency_status")
+}
+
+enum JobName {
+  purge_visitors
+  prune_sessions
+  prune_idempotency_keys
+  prune_sign_in_attempts
+
+  @@map("job_name")
+}
+
+enum JobResult {
+  running
+  ok
+  failed
+
+  @@map("job_result")
+}
+
+model Office {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  name      String   @unique
+  // IANA zone name such as Asia/Kolkata. A change is blocked while future bookings exist (ADR-0009).
+  timeZone  String   @map("time_zone")
+  version   Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?  @map("created_by") @db.Uuid
+
+  hours  OfficeHours[]
+  rooms  Room[]
+  users  User[]
+  visits Visit[]
+
+  @@map("offices")
+}
+
+model OfficeHours {
+  officeId  String   @map("office_id") @db.Uuid
+  office    Office   @relation(fields: [officeId], references: [id])
+  // ISO weekday, 1 is Monday and 7 is Sunday. No row for a weekday means closed (AC-54).
+  weekday   Int      @db.SmallInt
+  opensAt   DateTime @map("opens_at") @db.Time(0)
+  closesAt  DateTime @map("closes_at") @db.Time(0)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?  @map("created_by") @db.Uuid
+
+  /// T-02 raw SQL: CHECK (opens_at < closes_at) and CHECK (weekday BETWEEN 1 AND 7).
+  // The composite key starts with office_id, so it serves Q1 (hours by office and weekday) and the FK.
+  @@id([officeId, weekday])
+  @@map("office_hours")
+}
+
+model Room {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  officeId  String    @map("office_id") @db.Uuid
+  office    Office    @relation(fields: [officeId], references: [id])
+  name      String
+  floor     Int
+  size      Int
+  version   Int       @default(1)
+  // Soft delete: history keeps removed rooms (AC-32).
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?   @map("created_by") @db.Uuid
+
+  bookings Booking[]
+  series   BookingSeries[]
+
+  /// T-02 raw SQL: partial unique index on (office_id, lower(name)) WHERE deleted_at IS NULL.
+  /// T-02 raw SQL: CHECK (size >= 1).
+  // Named query Q1: live rooms of one office with size >= N. Equality on office_id, then range on size. Also serves the FK.
+  @@index([officeId, size], map: "rooms_office_size_idx")
+  @@map("rooms")
+}
+
+model User {
+  id                    String    @id @default(uuid(7)) @db.Uuid
+  // Null only for a platform admin.
+  officeId              String?   @map("office_id") @db.Uuid
+  office                Office?   @relation(fields: [officeId], references: [id])
+  // The app stores the address trimmed. Uniqueness is on lower(email), see the T-02 note below.
+  email                 String
+  name                  String
+  role                  Role
+  phone                 String?
+  desk                  String?
+  // Argon2id hash. Null until the first password is issued. Never leaves src/data/user.ts.
+  passwordHash          String?   @map("password_hash")
+  deactivatedAt         DateTime? @map("deactivated_at") @db.Timestamptz(6)
+  // Name kept from design.md and the seed spec (AC-49), so no is_ prefix.
+  mustChangePassword    Boolean   @default(false) @map("must_change_password")
+  tempPasswordExpiresAt DateTime? @map("temp_password_expires_at") @db.Timestamptz(6)
+  version               Int       @default(1)
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy             String?   @map("created_by") @db.Uuid
+
+  sessions        Session[]
+  bookings        Booking[]
+  series          BookingSeries[]
+  hostedVisits    Visit[]          @relation("VisitHost")
+  checkedInVisits Visit[]          @relation("VisitCheckedInBy")
+  idempotencyKeys IdempotencyKey[]
+
+  /// T-02 raw SQL: UNIQUE INDEX on lower(email) (Q1 sign-in lookup by email).
+  /// T-02 raw SQL: CHECK (office_id IS NOT NULL OR role = 'platform_admin').
+  // Named queries Q2 (users of an office) and Q3 (active admins of an office): equality on office_id and role. Also serves the FK.
+  @@index([officeId, role], map: "users_office_role_idx")
+  @@map("users")
+}
+
+model SignInAttempt {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  // SHA-256 of the lower-cased email, hex. Known and unknown emails lock alike (AC-48).
+  emailHash String   @map("email_hash")
+  ip        String
+  at        DateTime @default(now()) @map("at") @db.Timestamptz(6)
+
+  // Named query Q1: failures by email hash in the last 15 minutes. The worker prune also reads by at.
+  @@index([emailHash, at], map: "sign_in_attempts_email_at_idx")
+  // Named query Q2: distinct email hashes by IP in the last 15 minutes.
+  @@index([ip, at], map: "sign_in_attempts_ip_at_idx")
+  @@map("sign_in_attempts")
+}
+
+model Session {
+  // SHA-256 of the 256-bit session token, hex. The token itself is never stored.
+  tokenHash String   @id @map("token_hash")
+  userId    String   @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // FK index. Also named query Q2: delete the sessions of one user.
+  @@index([userId], map: "sessions_user_idx")
+  // Named query: the nightly prune deletes rows where expires_at is in the past.
+  @@index([expiresAt], map: "sessions_expires_idx")
+  @@map("sessions")
+}
+
+model Booking {
+  id        String         @id @default(uuid(7)) @db.Uuid
+  roomId    String         @map("room_id") @db.Uuid
+  room      Room           @relation(fields: [roomId], references: [id])
+  ownerId   String         @map("owner_id") @db.Uuid
+  owner     User           @relation(fields: [ownerId], references: [id])
+  seriesId  String?        @map("series_id") @db.Uuid
+  series    BookingSeries? @relation(fields: [seriesId], references: [id])
+  startsAt  DateTime       @map("starts_at") @db.Timestamptz(6)
+  endsAt    DateTime       @map("ends_at") @db.Timestamptz(6)
+  attendees Int
+  status    BookingStatus  @default(confirmed)
+  version   Int            @default(1)
+  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?        @map("created_by") @db.Uuid
+
+  /// T-02 raw SQL: CREATE EXTENSION btree_gist.
+  /// T-02 raw SQL: EXCLUDE USING gist (room_id WITH =, tstzrange(starts_at, ends_at, '[)') WITH &&) WHERE (status = 'confirmed') (ADR-0006).
+  /// T-02 raw SQL: CHECK (starts_at < ends_at) and CHECK (attendees >= 1).
+  // Named queries Q1 (bookings of a room for a day) and Q4 (future bookings of a room): equality on room_id, range on starts_at. Also serves the FK.
+  @@index([roomId, startsAt], map: "bookings_room_starts_idx")
+  // Named query Q2: my future bookings. Also serves the FK.
+  @@index([ownerId, startsAt], map: "bookings_owner_starts_idx")
+  // FK index. Also named query: bookings of one series.
+  @@index([seriesId], map: "bookings_series_idx")
+  @@map("bookings")
+}
+
+model BookingSeries {
+  id        String        @id @default(uuid(7)) @db.Uuid
+  ownerId   String        @map("owner_id") @db.Uuid
+  owner     User          @relation(fields: [ownerId], references: [id])
+  roomId    String        @map("room_id") @db.Uuid
+  room      Room          @relation(fields: [roomId], references: [id])
+  pattern   SeriesPattern
+  untilDate DateTime      @map("until_date") @db.Date
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?       @map("created_by") @db.Uuid
+
+  bookings Booking[]
+
+  // FK index.
+  @@index([ownerId], map: "booking_series_owner_idx")
+  // FK index.
+  @@index([roomId], map: "booking_series_room_idx")
+  @@map("booking_series")
+}
+
+model Visit {
+  id            String      @id @default(uuid(7)) @db.Uuid
+  officeId      String      @map("office_id") @db.Uuid
+  office        Office      @relation(fields: [officeId], references: [id])
+  hostId        String      @map("host_id") @db.Uuid
+  host          User        @relation("VisitHost", fields: [hostId], references: [id])
+  // Personal data. Nullable so the nightly purge can clear it (AC-09). Keep visit_date, office, host and times (AC-18).
+  name          String?
+  email         String?
+  phone         String?
+  company       String?
+  visitDate     DateTime    @map("visit_date") @db.Date
+  status        VisitStatus @default(expected)
+  checkedInAt   DateTime?   @map("checked_in_at") @db.Timestamptz(6)
+  checkedInById String?     @map("checked_in_by") @db.Uuid
+  checkedInBy   User?       @relation("VisitCheckedInBy", fields: [checkedInById], references: [id])
+  checkedOutAt  DateTime?   @map("checked_out_at") @db.Timestamptz(6)
+  hostSeenAt    DateTime?   @map("host_seen_at") @db.Timestamptz(6)
+  anonymisedAt  DateTime?   @map("anonymised_at") @db.Timestamptz(6)
+  version       Int         @default(1)
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy     String?     @map("created_by") @db.Uuid
+
+  /// T-02 raw SQL: CHECKs tying status to checked_in_at and checked_out_at.
+  /// T-02 raw SQL: CHECK (name IS NOT NULL OR anonymised_at IS NOT NULL).
+  /// T-02 raw SQL: partial index (host_id) WHERE host_seen_at IS NULL AND status = 'checked_in' (Q3 unseen arrivals).
+  /// T-02 raw SQL: partial index (visit_date) WHERE anonymised_at IS NULL (Q4 purge).
+  /// T-02 raw SQL: partial index (office_id) WHERE status = 'checked_in' (Q5 earlier days still checked in).
+  // Named query Q1: today's visits of an office. Also serves the FK.
+  @@index([officeId, visitDate], map: "visits_office_date_idx")
+  // Named query Q2: my visits. Also serves the FK.
+  @@index([hostId, visitDate], map: "visits_host_date_idx")
+  // FK index.
+  @@index([checkedInById], map: "visits_checked_in_by_idx")
+  @@map("visits")
+}
+
+// Append only. No FKs: office_id is an immutable snapshot and actor_id is null for the system principal.
+// `at` plays the role of created_at. There is no updated_at.
+model AuditEvent {
+  id         String          @id @default(uuid(7)) @db.Uuid
+  at         DateTime        @default(now()) @map("at") @db.Timestamptz(6)
+  officeId   String?         @map("office_id") @db.Uuid
+  // Null means the system principal (worker, seed or break-glass).
+  actorId    String?         @map("actor_id") @db.Uuid
+  action     AuditAction
+  entityType AuditEntityType @map("entity_type")
+  // For a visit this is the visit id only. Visitor names never enter the table (AC-52).
+  entityId   String          @map("entity_id") @db.Uuid
+  // Reason codes and counts only. No personal data.
+  detail     Json?
+
+  /// T-02 raw SQL: row trigger that raises on UPDATE and DELETE, statement trigger that raises on TRUNCATE (AC-51).
+  // Named query Q1: office history, newest first.
+  @@index([officeId, at(sort: Desc), id(sort: Desc)], map: "audit_events_office_at_idx")
+  // Named query Q2: all offices, newest first.
+  @@index([at(sort: Desc), id(sort: Desc)], map: "audit_events_at_idx")
+  // Named query Q3: events of one entity.
+  @@index([entityType, entityId], map: "audit_events_entity_idx")
+  @@map("audit_events")
+}
+
+model IdempotencyKey {
+  id          String            @id @default(uuid(7)) @db.Uuid
+  userId      String            @map("user_id") @db.Uuid
+  user        User              @relation(fields: [userId], references: [id])
+  scope       String
+  key         String
+  // SHA-256 of method, path and body. A different hash for the same key gives 422.
+  requestHash String            @map("request_hash")
+  status      IdempotencyStatus @default(running)
+  // Ids only. Never personal data.
+  response    Json?
+  createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Q1 lookup by user, scope and key. The key also starts with user_id, so it serves the FK.
+  @@unique([userId, scope, key], map: "idempotency_keys_user_scope_key_uq")
+  @@map("idempotency_keys")
+}
+
+model JobRun {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  job       JobName
+  runDate   DateTime  @map("run_date") @db.Date
+  result    JobResult @default(running)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Q1: the claim. The insert hits this unique key first.
+  @@unique([job, runDate], map: "job_runs_job_date_uq")
+  @@map("job_runs")
+}
+
+/// T-02 raw SQL (roles and grants): app_owner owns the schema and is the only role with TRUNCATE.
+/// T-02 raw SQL: app_web gets SELECT, INSERT, UPDATE on every table except audit_events (INSERT, SELECT) and job_runs (SELECT).
+/// T-02 raw SQL: app_web gets DELETE on sessions, sign_in_attempts and idempotency_keys.
+/// T-02 raw SQL: app_worker gets the grants listed in the S-00 spec section 4.

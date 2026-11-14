@@ -1,0 +1,10 @@
+# pnpm 12 blocks dependency build scripts by default. List the packages allowed to run one.
+allowBuilds:
+  "@prisma/client": true
+  "@prisma/engines": true
+  esbuild: true
+  prisma: true
+minimumReleaseAgeExclude:
+  - "@eslint/config-array@0.23.6"
+  - eslint@10.15.0
+  - postcss@8.5.33
