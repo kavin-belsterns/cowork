@@ -1,6 +1,6 @@
 // Purpose: Integration test for database migration, raw-SQL constraints, and audit append-only guards.
 // Rules: standards/testing.md, standards/data.md. Verify exclusion constraint 23P01, audit triggers, roles and grants.
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { Client } from 'pg';
@@ -67,41 +67,30 @@ describe('Database Migration & Raw-SQL Schema Verification', () => {
     });
   });
 
-  describe('Live database validation (skipped if DB container is offline)', () => {
-    let dbConnected = false;
-    let client: Client | null = null;
-    const migratorUrl =
-      process.env.DATABASE_URL_MIGRATOR ?? 'postgresql://app_owner:app_owner@localhost:5433/app_test';
+  describe('Live database validation (requires DATABASE_URL_MIGRATOR)', () => {
+    let client: Client;
 
     beforeAll(async () => {
-      client = new Client({ connectionString: migratorUrl, connectionTimeoutMillis: 1000 });
+      const migratorUrl = process.env.DATABASE_URL_MIGRATOR;
+      if (!migratorUrl) {
+        throw new Error(
+          'DATABASE_URL_MIGRATOR is not set. Start the test database and run: DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm vitest run tests/integration/contracts',
+        );
+      }
+      client = new Client({ connectionString: migratorUrl, connectionTimeoutMillis: 3000 });
       try {
         await client.connect();
-        dbConnected = true;
-      } catch {
-        dbConnected = false;
-        if (client) {
-          try {
-            await client.end();
-          } catch {
-            // ignore
-          }
-          client = null;
-        }
+      } catch (err: unknown) {
+        const reason = err instanceof Error ? err.message : String(err);
+        throw new Error(`Cannot connect to the test database from DATABASE_URL_MIGRATOR: ${reason}`);
       }
     });
 
-    it('proves live DB connectivity or notes container state', () => {
-      if (!dbConnected) {
-        expect(dbConnected).toBe(false);
-      } else {
-        expect(dbConnected).toBe(true);
-      }
+    afterAll(async () => {
+      await client?.end();
     });
 
     it('verifies exclusion constraint on live database rejects overlapping confirmed bookings with 23P01', async () => {
-      if (!dbConnected || !client) return;
-
       const testRoomId = '0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f9999';
       const userAlice = '0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f9998';
       const officeId = '0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f9997';
@@ -148,31 +137,26 @@ describe('Database Migration & Raw-SQL Schema Verification', () => {
     });
 
     it('verifies audit_events table rejects UPDATE, DELETE and TRUNCATE via triggers', async () => {
-      if (!dbConnected || !client) return;
+      const auditId = '0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f9990';
+      const statements: Array<{ sql: string; params: string[] }> = [
+        { sql: `UPDATE audit_events SET action = 'changed' WHERE id = $1`, params: [auditId] },
+        { sql: `DELETE FROM audit_events WHERE id = $1`, params: [auditId] },
+        { sql: `TRUNCATE TABLE audit_events`, params: [] },
+      ];
 
-      await client.query('BEGIN');
-      try {
-        const auditId = '0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f9990';
-        await client.query(
-          `INSERT INTO audit_events (id, action, entity_type, entity_id, actor_id)
-           VALUES ($1, 'created', 'booking', '0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f9991', '0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f9998')`,
-          [auditId],
-        );
-
-        // Update must fail
-        await expect(
-          client.query(`UPDATE audit_events SET action = 'changed' WHERE id = $1`, [auditId]),
-        ).rejects.toThrow(/audit_events is append only/);
-
-        // Delete must fail
-        await expect(client.query(`DELETE FROM audit_events WHERE id = $1`, [auditId])).rejects.toThrow(
-          /audit_events is append only/,
-        );
-
-        // Truncate must fail
-        await expect(client.query(`TRUNCATE TABLE audit_events`)).rejects.toThrow(/audit_events is append only/);
-      } finally {
-        await client.query('ROLLBACK');
+      // Each forbidden statement runs in its own transaction, so one error cannot abort the next.
+      for (const stmt of statements) {
+        await client.query('BEGIN');
+        try {
+          await client.query(
+            `INSERT INTO audit_events (id, action, entity_type, entity_id, actor_id)
+             VALUES ($1, 'created', 'booking', '0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f9991', '0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f9998')`,
+            [auditId],
+          );
+          await expect(client.query(stmt.sql, stmt.params)).rejects.toThrow(/audit_events is append only/);
+        } finally {
+          await client.query('ROLLBACK');
+        }
       }
     });
   });

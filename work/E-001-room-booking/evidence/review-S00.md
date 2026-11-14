@@ -139,3 +139,7 @@ Checks in order:
 Critical Issues: None.
 Suggestions:
 1. `docs/ui/interface-rules.md:32`: Consider explicitly listing the paired status foreground tokens alongside the status background tokens in the status table.
+
+## E-001/S-00 story check fix (lead, 2026-11-14)
+Story re-run with the test DB up found `tests/integration/contracts/migration.test.ts` failing 1 of 10. Earlier passes came from the DB being offline: the live block returned early and passed. CI on PR #100 (real DB) failed on the same file.
+Fixed in T-05 by the test-engineer: one transaction per forbidden audit statement; the live block now fails when it cannot connect (no fallback URL, no early return). Lead verified: unreachable DB gives exit 1, test DB gives 9 of 9 passing. The T-05 card done list now includes `tests/integration/contracts`.
