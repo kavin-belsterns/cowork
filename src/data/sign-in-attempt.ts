@@ -23,3 +23,8 @@ export async function countDistinctEmailsByIp(ip: string, since: Date): Promise<
   });
   return rows.length;
 }
+
+/** Delete every failure row for one hash. Called after a successful password change for the user key hash. */
+export async function clearFailures(emailHash: string): Promise<void> {
+  await getDb('web').signInAttempt.deleteMany({ where: { emailHash } });
+}

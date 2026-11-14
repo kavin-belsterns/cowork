@@ -1,0 +1,153 @@
+$ pnpm tsc --noEmit
+exit: 0
+
+
+$ pnpm lint
+exit: 0
+$ eslint .
+
+$ pnpm vitest run tests/unit/domain/auth tests/unit/lib/auth
+exit: 0
+
+ RUN  v4.1.12 /Users/kavinpasupathy/Documents/cowork/.claude/worktrees/e001-s01-sign-in-4e4d85
+
+
+ Test Files  11 passed (11)
+      Tests  85 passed (85)
+   Start at  21:51:47
+   Duration  495ms (transform 275ms, setup 0ms, import 737ms, tests 617ms, environment 1ms)
+
+$ DATABASE_URL_WEB=$TEST_DATABASE_URL_WEB DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm vitest run tests/unit/data/sign-in-attempt.test.ts
+exit: 0
+
+ RUN  v4.1.12 /Users/kavinpasupathy/Documents/cowork/.claude/worktrees/e001-s01-sign-in-4e4d85
+
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  21:51:48
+   Duration  249ms (transform 29ms, setup 0ms, import 77ms, tests 97ms, environment 0ms)
+
+$ bash scripts/ci/check-auth-in-actions.sh
+exit: 0
+PASS check-auth-in-actions: 3 file(s) call requirePermission(
+
+$ bash scripts/ci/check-no-console.sh
+exit: 0
+PASS check-no-console: no console calls outside logger
+
+$ bash scripts/ci/check-test-tree.sh
+exit: 0
+PASS check-test-tree: no test files under src/
+
+$ git diff --exit-code origin/main -- prisma src/contracts
+exit: 0
+
+
+$ pnpm ls next @prisma/client prisma
+exit: 0
+Legend: production dependency, optional only, dev only
+
+room-booking@0.0.0 /Users/kavinpasupathy/Documents/cowork/.claude/worktrees/e001-s01-sign-in-4e4d85 (PRIVATE)
+│
+│   dependencies:
+├── @prisma/client@7.10.1
+├── next@16.4.6
+│
+│   devDependencies:
+└── prisma@7.10.1
+
+3 packages
+
+$ APP_ORIGIN=http://localhost:3000 pnpm build
+exit: 0
+   7 | ...The logger writes to stdout. Edge has no stdout, so skip there.
+>  8 | ...(typeof process === 'undefined' || !process.stdout) return;
+     |                                        ^^^^^^^^^^^^^^
+   9 | ...st { logger } = await import('@/lib/logger');
+  10 | ...st header = request.headers['x-request-id'];
+  11 | ...st requestId = (Array.isArray(header) ? header[0] : header) ?? 'unknown';
+
+Ecmascript file had an error
+
+
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /_not-found
+└ ƒ /api/health
+
+
+ƒ Proxy (Middleware)
+
+ƒ  (Dynamic)  server-rendered on demand
+
+## Notes
+- IP delay reads "1 s more each" as (distinct emails - 29) seconds from 30 (30 gives 1 s, 99 gives 70 s). Change `ipDecision` if the signer meant a flat 1 s.
+- Sign-in reads the role from the new session row with `findSessionByTokenHash` to pick the role home. `CredentialUser` has no role.
+- New copy not in spec section 2: "Enter a valid email address.", "Enter your password.", "Enter your current password." (field errors for empty or bad input).
+- The new session after a password change keeps the old `expiresAt`, so the 12 h limit still runs from sign-in.
+- `FormState` and helpers sit in `src/lib/auth/form-state.ts` for T-04 to import.
+- No file outside owns was changed. The worktree shows no other change from this task.
+- Round 2: `clearFailures(emailHash)` added to `src/data/sign-in-attempt.ts` (in owns). `changePassword` calls it for the user key after `setOwnPassword`. `app_web` already holds DELETE on `sign_in_attempts`.
+- Round 2: `fieldErrorsFrom` takes `(error, copy, requestId)` and never returns zod text. Unmapped fields and over-length values give the `internal` copy under the `form` key.
+- Round 2: `returnTo` is parsed apart with `checkedReturnTo`. `SignInInput.omit({ returnTo: true })` validates email and password.
+
+## Files changed
+src/domain/auth/rules.ts
+src/lib/auth/token.ts
+src/lib/auth/password.ts
+src/lib/auth/cookie.ts
+src/lib/auth/client-ip.ts
+src/lib/auth/return-to.ts
+src/lib/auth/session.ts
+src/lib/auth/form-state.ts
+src/lib/auth/sign-in.ts
+src/lib/auth/change-password.ts
+src/app/(auth)/sign-in/actions.ts
+src/app/(app)/account/password/actions.ts
+src/app/api/health/route.ts
+tests/unit/domain/auth/rules.test.ts
+tests/unit/lib/auth/token.test.ts
+tests/unit/lib/auth/password.test.ts
+tests/unit/lib/auth/cookie.test.ts
+tests/unit/lib/auth/client-ip.test.ts
+tests/unit/lib/auth/return-to.test.ts
+tests/unit/lib/auth/session.test.ts
+tests/unit/lib/auth/form-state.test.ts
+tests/unit/lib/auth/sign-in.test.ts
+tests/unit/lib/auth/change-password.test.ts
+tests/unit/lib/auth/health-route.test.ts
+src/data/sign-in-attempt.ts
+tests/unit/data/sign-in-attempt.test.ts
+work/E-001-room-booking/evidence/E001-S01-T03.txt
+
+## Owns check
+$ owns-check.sh work/E-001-room-booking/tasks/E001-S01-T03.md <26 paths from git status>
+ALLOW src/data/sign-in-attempt.ts
+ALLOW tests/unit/data/sign-in-attempt.test.ts
+ALLOW src/app/(app)/account/password/actions.ts
+ALLOW src/app/(auth)/sign-in/actions.ts
+ALLOW src/app/api/health/route.ts
+ALLOW src/domain/auth/rules.ts
+ALLOW src/lib/auth/change-password.ts
+ALLOW src/lib/auth/client-ip.ts
+ALLOW src/lib/auth/cookie.ts
+ALLOW src/lib/auth/form-state.ts
+ALLOW src/lib/auth/password.ts
+ALLOW src/lib/auth/return-to.ts
+ALLOW src/lib/auth/session.ts
+ALLOW src/lib/auth/sign-in.ts
+ALLOW src/lib/auth/token.ts
+ALLOW tests/unit/domain/auth/rules.test.ts
+ALLOW tests/unit/lib/auth/change-password.test.ts
+ALLOW tests/unit/lib/auth/client-ip.test.ts
+ALLOW tests/unit/lib/auth/cookie.test.ts
+ALLOW tests/unit/lib/auth/form-state.test.ts
+ALLOW tests/unit/lib/auth/health-route.test.ts
+ALLOW tests/unit/lib/auth/password.test.ts
+ALLOW tests/unit/lib/auth/return-to.test.ts
+ALLOW tests/unit/lib/auth/session.test.ts
+ALLOW tests/unit/lib/auth/sign-in.test.ts
+ALLOW tests/unit/lib/auth/token.test.ts
+owns-check exit: 0

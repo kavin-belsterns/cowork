@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 vi.mock('server-only', () => ({}));
 
-import { countDistinctEmailsByIp, countFailures, recordFailure } from '@/data/sign-in-attempt';
+import { clearFailures, countDistinctEmailsByIp, countFailures, recordFailure } from '@/data/sign-in-attempt';
 
 const run = randomUUID();
 const hashA = `ut-a-${run}`;
@@ -68,5 +68,18 @@ describe('src/data/sign-in-attempt', () => {
   it('returns 0 for an unknown hash and an unknown IP', async () => {
     expect(await countFailures(`ut-none-${run}`, since)).toBe(0);
     expect(await countDistinctEmailsByIp(`ut-none-${run}`, since)).toBe(0);
+  });
+
+  it('clears every row for one hash and leaves other hashes alone', async () => {
+    const mine = `ut-clear-${run}`;
+    const other = `ut-clear-other-${run}`;
+    await recordFailure(mine, ip, minutesAgo(1));
+    await recordFailure(mine, ip, minutesAgo(40));
+    await recordFailure(other, ip, minutesAgo(1));
+    await clearFailures(mine);
+    expect(await countFailures(mine, minutesAgo(60))).toBe(0);
+    expect(await countFailures(other, since)).toBe(1);
+    await clearFailures(`ut-clear-none-${run}`);
+    await admin.query('DELETE FROM sign_in_attempts WHERE email_hash = $1', [other]);
   });
 });
