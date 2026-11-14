@@ -1,0 +1,50 @@
+# Story Evidence: E-001/S-00 Contracts
+
+$ pnpm install --frozen-lockfile
+exit: 0
+Lockfile is up to date, resolution step is skipped
+Done in 1.6s using pnpm v12.18.0
+
+$ pnpm tsc --noEmit
+exit: 0
+
+$ pnpm lint
+exit: 0
+$ eslint .
+
+$ pnpm prisma validate
+exit: 0
+Loaded Prisma config from prisma.config.ts.
+The schema at prisma/schema.prisma is valid 🚀
+
+$ DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm prisma migrate reset --force && pnpm prisma db seed
+exit: 0
+Applying migration `20261114093324_e001_init`
+seed ok: 2 offices, 8 rooms, 10 users, 8 bookings, 16 visits
+🌱  The seed command has been executed.
+
+$ bash scripts/ci/check-fk-index.sh
+exit: 0
+PASS check-fk-index: every foreign key has an index
+
+$ bash scripts/ci/check-versions.sh
+exit: 0
+PASS check-versions: all dependencies pinned exact, pnpm-lock.yaml present
+
+$ pnpm vitest run tests/unit/contracts tests/unit/lib tests/integration/contracts tests/integration/house
+exit: 0
+ Test Files  23 passed (23)
+      Tests  925 passed (925)
+   Start at  17:00:17
+   Duration  1.05s
+
+$ pnpm docs:openapi && git diff --exit-code docs/api/openapi.yaml
+exit: 0
+Wrote docs/api/openapi.yaml
+
+$ docker compose config
+exit: 0
+name: room-booking
+services:
+  db: ...
+  web: ...
