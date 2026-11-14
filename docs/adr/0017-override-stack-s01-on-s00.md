@@ -19,6 +19,7 @@ Build S-01 on a branch cut from `feat/E001-S00-contracts`. The S-01 PR targets t
 - Easier: S-01 work starts now, not after S-00 approval.
 - Harder: every S-00 change means a rebase and a re-run of the affected done commands. A contract change in S-00 review can force S-01 rework.
 - Revisit when: PR #100 merges or S-00 review changes a contract S-01 imports.
+- Expired 2026-11-14: PR #100 merged as 01424bf; S-01 rebased onto main.
 
 ## Owned-files gap in parallel sessions
 - S-01 runs in its own worktree session. The `check-owned-files.sh` hook reads `work/.active-task` from the main checkout, not from the worktree.
