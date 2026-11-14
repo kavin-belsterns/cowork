@@ -1,13 +1,13 @@
 # Story Evidence: E-001/S-00 Contracts
 
-Re-run by the lead on 2026-11-14 after the T-05 fix, test DB e001-testdb up. Reset run under the user's consent for e001_test.
+Re-run by the lead on 2026-11-14 after the story review fixes (T-04, T-05). Test DB e001-testdb up. Reset run under the user's consent for e001_test.
 
 ```
 $ pnpm install --frozen-lockfile
 exit: 0
-✓ Lockfile passes supply-chain policies (verified 2h ago)
+✓ Lockfile passes supply-chain policies (verified 3m ago)
 Lockfile is up to date, resolution step is skipped
-Done in 40ms using pnpm v12.18.0
+Done in 21ms using pnpm v12.18.0
 ```
 
 ```
@@ -81,9 +81,9 @@ exit: 0
 
 
  Test Files  23 passed (23)
-      Tests  924 passed (924)
-   Start at  17:34:43
-   Duration  837ms (transform 406ms, setup 0ms, import 2.22s, tests 404ms, environment 1ms)
+      Tests  930 passed (930)
+   Start at  17:44:15
+   Duration  1.02s (transform 453ms, setup 0ms, import 2.11s, tests 496ms, environment 2ms)
 ```
 
 ```
@@ -91,6 +91,31 @@ $ pnpm docs:openapi && git diff --exit-code docs/api/openapi.yaml
 exit: 0
 $ tsx scripts/gen-openapi.ts
 Wrote docs/api/openapi.yaml
+```
+
+```
+$ APP_ORIGIN=http://localhost:3000 pnpm build
+exit: 0
+  [90m 6 |[0m ...[36mt[0m [36mconst[0m onRequestError: [33mInstrumentation[0m.onRequestError = [36masync[0m (error, request, context...
+  [90m 7 |[0m ...[90mThe logger writes to stdout. Edge has no stdout, so skip there.[0m
+[33m[1m>[0m [90m 8 |[0m ...([36mtypeof[0m process === [32m'undefined'[0m || !process.stdout) [36mreturn[0m;
+  [90m   |[0m                                        [33m[1m^^^^^^^^^^^^^^[0m
+  [90m 9 |[0m ...[36mst[0m { logger } = [36mawait[0m [36mimport[0m([32m'@/lib/logger'[0m);
+  [90m10 |[0m ...[36mst[0m header = request.headers[[32m'x-request-id'[0m];
+  [90m11 |[0m ...[36mst[0m requestId = ([33mArray[0m.isArray(header) ? header[[35m0[0m] : header) ?? [32m'unknown'[0m;
+
+Ecmascript file had an error
+
+
+  Finalizing page optimization ...
+
+
+Route (pages)
+─ ○ /404
+
+ƒ Proxy (Middleware)
+
+○  (Static)  prerendered as static content
 ```
 
 ```
