@@ -134,7 +134,7 @@ All interface labels and actions use **sentence case** typography.
 | `request-changed` | 422 | Idempotency key reused with new payload | This request changed. Submit it again. |
 | `rule-violation` | 422 | Business constraint violation | Specific domain rule message |
 | `locked` | 429 | Failed sign-in lockout or rate limit | Too many attempts. Try again in 15 minutes. |
-| `internal` | 500 | Unexpected server error | Something went wrong. Try again. If it happens again, give reference to your admin. |
+| `internal` | 500 | Unexpected server error | Something went wrong. Try again. If it happens again, give reference [id] to your admin. |
 
 | Scenario | Message text |
 |---|---|
@@ -142,8 +142,13 @@ All interface labels and actions use **sentence case** typography.
 | Time zone change blocked | Move or cancel future bookings before changing the time zone. |
 | Concurrent import blocked | Another import for this office is running. Try again in a minute. |
 | Last platform admin guard | The company needs at least one platform admin. |
+| No free dates for series | No dates were free. Nothing was booked. |
 | Office closed on day | This office is closed on [day]. |
 | Visitor arrival banner | Your visitor [name] has arrived at reception. |
 | Sign-in reset hint | Forgot your password? Ask your office admin to reset it. |
 | Temporary password issue | Shown once. Give it to the user in person. |
 | Anonymised visit history | Visitor details removed |
+| Activity history visitor | Visitor V-3F2A |
+| Date display format | Mon 16 Nov 2026 |
+| Time display format | 24-hour format, such as 14:00 |
+| Cross-office time display | 14:00 with office time zone short name |
