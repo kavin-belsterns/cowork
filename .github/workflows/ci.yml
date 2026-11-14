@@ -38,8 +38,9 @@ jobs:
       CI: "true"
       NODE_ENV: test
       # Throwaway CI container. Test values only.
-      DATABASE_URL_WEB: postgresql://app_web:app_web@localhost:5432/app_test
-      DATABASE_URL_WORKER: postgresql://app_worker:app_worker@localhost:5432/app_test
+      # app_web and app_worker stay NOLOGIN. The *_login roles log in and inherit their grants (created in the Database step).
+      DATABASE_URL_WEB: postgresql://app_web_login:app_web@localhost:5432/app_test
+      DATABASE_URL_WORKER: postgresql://app_worker_login:app_worker@localhost:5432/app_test
       DATABASE_URL_MIGRATOR: postgresql://app_owner:app_owner@localhost:5432/app_test
       APP_ORIGIN: http://localhost:3000
       LOG_LEVEL: error
@@ -81,7 +82,9 @@ jobs:
       - name: Database
         run: |
           pnpm exec prisma migrate deploy
-          psql "$DATABASE_URL_MIGRATOR" -c "ALTER ROLE app_web PASSWORD 'app_web'" -c "ALTER ROLE app_worker PASSWORD 'app_worker'"
+          psql "$DATABASE_URL_MIGRATOR" -v ON_ERROR_STOP=1 \
+            -c "CREATE ROLE app_web_login LOGIN PASSWORD 'app_web' INHERIT IN ROLE app_web" \
+            -c "CREATE ROLE app_worker_login LOGIN PASSWORD 'app_worker' INHERIT IN ROLE app_worker"
           pnpm exec prisma db seed
       - name: Vitest unit and integration
         run: pnpm exec vitest run
