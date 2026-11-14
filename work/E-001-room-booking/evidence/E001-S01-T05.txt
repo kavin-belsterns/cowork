@@ -1,0 +1,97 @@
+$ pnpm tsc --noEmit
+exit: 0
+
+
+$ pnpm lint
+exit: 0
+$ eslint .
+
+$ DATABASE_URL_WEB=$TEST_DATABASE_URL_WEB DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm vitest run tests/integration/auth
+exit: 0
+
+ RUN  v4.1.12 /Users/kavinpasupathy/Documents/cowork/.claude/worktrees/e001-s01-sign-in-4e4d85
+
+
+ Test Files  3 passed (3)
+      Tests  42 passed (42)
+   Start at  22:31:38
+   Duration  1.05s (transform 139ms, setup 0ms, import 325ms, tests 1.50s, environment 0ms)
+
+
+$ PORT=3101 BASE_URL=http://localhost:3101 APP_ORIGIN=http://localhost:3101 DATABASE_URL_WEB=$TEST_DATABASE_URL_WEB DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm playwright test --project=e2e tests/e2e/E-001/S01-sign-in.spec.ts
+exit: 0
+[WebServer]    9 | ...st { logger } = await import('@/lib/logger');
+[WebServer]   10 | ...st header = request.headers['x-request-id'];
+[WebServer]   11 | ...st requestId = (Array.isArray(header) ? header[0] : header) ?? 'unknown';
+[WebServer] 
+[WebServer] Ecmascript file had an error
+[WebServer] 
+[WebServer] 
+[WebServer] $ next start
+
+Running 7 tests using 1 worker
+
+  ✓  1 [e2e] › tests/e2e/E-001/S01-sign-in.spec.ts:101:1 › E-001/AC-47 a correct email and password opens the role home (399ms)
+  ✓  2 [e2e] › tests/e2e/E-001/S01-sign-in.spec.ts:110:1 › E-001/AC-48 five failures in 15 minutes lock the account, even for the right password (724ms)
+  ✓  3 [e2e] › tests/e2e/E-001/S01-sign-in.spec.ts:122:1 › E-001/AC-49 a user with must_change_password must set a new password first (247ms)
+  ✓  4 [e2e] › tests/e2e/E-001/S01-sign-in.spec.ts:153:1 › E-001/AC-71 a session ends 12 hours after it starts (326ms)
+  ✓  5 [e2e] › tests/e2e/E-001/S01-sign-in.spec.ts:174:1 › E-001/AC-72 a new password under 12 characters is rejected with "Use at least 12 characters." (314ms)
+  ✓  6 [e2e] › tests/e2e/E-001/S01-sign-in.spec.ts:189:1 › E-001/AC-84 a deactivated user is rejected with "This account is not active." (201ms)
+  ✓  7 [e2e] › tests/e2e/E-001/S01-sign-in.spec.ts:197:1 › E-001/AC-85 wrong details are rejected with "Email or password is wrong." for a known and an unknown email (294ms)
+
+  7 passed (6.9s)
+
+$ ! bash scripts/ci/check-ac-coverage.sh | grep -E 'E-001/AC-(47|48|49|71|72|84|85)$'
+exit: 0
+
+
+$ bash scripts/ci/check-test-tree.sh
+exit: 0
+PASS check-test-tree: no test files under src/
+
+## Notes
+
+DB unreachable run (not a done command). Suites FAIL, exit 1. Vitest lists the tests inside a failed suite as skipped, but the suite and the run fail.
+
+$ DATABASE_URL_WEB=postgresql://app_web:x@127.0.0.1:1/none DATABASE_URL_MIGRATOR=postgresql://app_owner:x@127.0.0.1:1/none pnpm vitest run tests/integration/auth
+exit: 1
+
+ RUN  v4.1.12 /Users/kavinpasupathy/Documents/cowork/.claude/worktrees/e001-s01-sign-in-4e4d85
+
+ ❯ tests/integration/auth/password.test.ts (13 tests | 13 skipped) 3ms
+ ❯ tests/integration/auth/sign-in.test.ts (26 tests | 26 skipped) 3ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/integration/auth/password.test.ts [ tests/integration/auth/password.test.ts ]
+ FAIL  tests/integration/auth/sign-in.test.ts [ tests/integration/auth/sign-in.test.ts ]
+Error: connect ECONNREFUSED 127.0.0.1:1
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  2 failed | 1 passed (3)
+      Tests  3 passed | 39 skipped (42)
+   Start at  22:31:39
+   Duration  218ms (transform 115ms, setup 0ms, import 293ms, tests 17ms, environment 0ms)
+
+
+Cleanup: audit_events is append only (AC-51), so the password tests leave audit rows (actor and entity are the deleted test user ids, no personal data). All users, sessions and sign_in_attempts made by the tests are deleted.
+AC-49 e2e snapshots the seed row must.change.chn@example.test and restores it afterwards. It never changes the password.
+One Playwright port 3101 server was started by the run and exited with it.
+
+## Files changed
+tests/integration/auth/helpers.ts
+tests/integration/auth/sign-in.test.ts
+tests/integration/auth/password.test.ts
+tests/integration/auth/health.test.ts
+tests/e2e/E-001/S01-sign-in.spec.ts
+work/E-001-room-booking/evidence/E001-S01-T05.txt
+
+## Owns check
+$ owns-check.sh work/E-001-room-booking/tasks/E001-S01-T05.md <5 paths from git status>
+ALLOW tests/e2e/E-001/S01-sign-in.spec.ts
+ALLOW tests/integration/auth/health.test.ts
+ALLOW tests/integration/auth/helpers.ts
+ALLOW tests/integration/auth/password.test.ts
+ALLOW tests/integration/auth/sign-in.test.ts
+owns-check exit: 0

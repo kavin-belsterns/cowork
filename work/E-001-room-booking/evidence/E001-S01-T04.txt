@@ -1,0 +1,153 @@
+$ pnpm tsc --noEmit
+exit: 0
+
+$ pnpm lint
+exit: 0
+$ eslint .
+
+$ bash scripts/ci/check-no-console.sh
+exit: 0
+PASS check-no-console: no console calls outside logger
+
+$ bash scripts/ci/check-test-tree.sh
+exit: 0
+PASS check-test-tree: no test files under src/
+
+$ pnpm ls next @prisma/client prisma
+exit: 0
+Legend: production dependency, optional only, dev only
+
+room-booking@0.0.0 /Users/kavinpasupathy/Documents/cowork/.claude/worktrees/e001-s01-sign-in-4e4d85 (PRIVATE)
+│
+│   dependencies:
+├── @prisma/client@7.10.1
+├── next@16.4.6
+│
+│   devDependencies:
+└── prisma@7.10.1
+
+3 packages
+
+$ APP_ORIGIN=http://localhost:3000 pnpm build
+exit: 0
+  [90m10 |[0m ...[36mst[0m header = request.headers[[32m'x-request-id'[0m];
+  [90m11 |[0m ...[36mst[0m requestId = ([33mArray[0m.isArray(header) ? header[[35m0[0m] : header) ?? [32m'unknown'[0m;
+
+Ecmascript file had an error
+
+
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /account/password
+├ ƒ /api/health
+└ ƒ /sign-in
+
+
+ƒ Proxy (Middleware)
+
+ƒ  (Dynamic)  server-rendered on demand
+
+
+$ PORT=3101 BASE_URL=http://localhost:3101 APP_ORIGIN=http://localhost:3101 DATABASE_URL_WEB=$TEST_DATABASE_URL_WEB DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm playwright test tests/ui/sign-in.spec.ts tests/ui/account-password.spec.ts
+exit: 0
+  ✓  145 [ui-375] › tests/ui/account-password.spec.ts:514:3 › /account/password keyboard and fields › sets autocomplete on both fields and allows paste (629ms)
+  ✓  150 [ui-1280] › tests/ui/account-password.spec.ts:489:3 › /account/password keyboard and fields › Tab reaches the skip link, the menu, then current password, new password and Save password (281ms)
+  ✓  149 [ui-768] › tests/ui/account-password.spec.ts:531:3 › PageShell session warning › E-001/AC-71 warns 5 minutes before the end, then asks the user to sign in again (863ms)
+  ✓  152 [ui-1280] › tests/ui/account-password.spec.ts:514:3 › /account/password keyboard and fields › sets autocomplete on both fields and allows paste (579ms)
+  ✓  151 [ui-375] › tests/ui/account-password.spec.ts:531:3 › PageShell session warning › E-001/AC-71 warns 5 minutes before the end, then asks the user to sign in again (855ms)
+  ✓  155 [ui-375] › tests/ui/account-password.spec.ts:557:3 › PageShell draft keeper › keeps a draft for the same user on the same page (337ms)
+  ✓  153 [ui-768] › tests/ui/account-password.spec.ts:557:3 › PageShell draft keeper › keeps a draft for the same user on the same page (935ms)
+  ✓  154 [ui-1280] › tests/ui/account-password.spec.ts:531:3 › PageShell session warning › E-001/AC-71 warns 5 minutes before the end, then asks the user to sign in again (864ms)
+  ✓  158 [ui-1280] › tests/ui/account-password.spec.ts:557:3 › PageShell draft keeper › keeps a draft for the same user on the same page (319ms)
+  ✓  156 [ui-375] › tests/ui/account-password.spec.ts:568:3 › PageShell draft keeper › clears drafts at sign-out (837ms)
+  ✓  157 [ui-768] › tests/ui/account-password.spec.ts:568:3 › PageShell draft keeper › clears drafts at sign-out (1.1s)
+  ✓  159 [ui-1280] › tests/ui/account-password.spec.ts:568:3 › PageShell draft keeper › clears drafts at sign-out (1.1s)
+  ✓  160 [ui-375] › tests/ui/account-password.spec.ts:585:3 › PageShell draft keeper › clears drafts when another user signs in (1.1s)
+  ✓  161 [ui-768] › tests/ui/account-password.spec.ts:585:3 › PageShell draft keeper › clears drafts when another user signs in (753ms)
+  ✓  163 [ui-375] › tests/ui/account-password.spec.ts:601:3 › PageShell draft keeper › never stores a password field (575ms)
+  ✓  162 [ui-1280] › tests/ui/account-password.spec.ts:585:3 › PageShell draft keeper › clears drafts when another user signs in (739ms)
+  ✓  164 [ui-768] › tests/ui/account-password.spec.ts:601:3 › PageShell draft keeper › never stores a password field (575ms)
+  ✓  165 [ui-1280] › tests/ui/account-password.spec.ts:601:3 › PageShell draft keeper › never stores a password field (580ms)
+
+  165 passed (31.9s)
+
+## Notes
+- Round 2: src/components/ui/input.tsx and label.tsx are the standard shadcn new-york components with S-00 tokens. No shadcn CLI run, no new dependency. TextField uses them. Menu toggle and Sign out use Button variants.
+- Flash note: kept only when the action redirect does not go to /sign-in. Redirect parsing lives in src/components/auth/redirect.ts. Safety nets: Sign out and the sign-in form both clear the note. New UI test covers the expired session path, and the sign-out test checks the note is cleared.
+- Loading tests wait on the prefetch response entry through expect.poll instead of waitForTimeout.
+- Spec table rows Empty (not used) and Not found (root not-found.tsx from S-00) have no files beside the pages. Tests cover both.
+- Role home pages of other stories do not exist yet. Tests assert the redirect URL only.
+- Test users are deleted after each test. Password change writes audit_events rows. That table is append only, so those rows stay. They hold no personal data.
+- Screenshots (test-results/ is git ignored, regenerated by command 7):
+  /Users/kavinpasupathy/Documents/cowork/.claude/worktrees/e001-s01-sign-in-4e4d85/test-results/ui-sign-in--sign-in-succes-b8e53-hint-and-one-primary-action-ui-375/sign-in-ui-375.png
+  /Users/kavinpasupathy/Documents/cowork/.claude/worktrees/e001-s01-sign-in-4e4d85/test-results/ui-sign-in--sign-in-succes-b8e53-hint-and-one-primary-action-ui-1280/sign-in-ui-1280.png
+  /Users/kavinpasupathy/Documents/cowork/.claude/worktrees/e001-s01-sign-in-4e4d85/test-results/ui-account-password--accou-8fc9d-elds-and-one-primary-action-ui-375/account-password-ui-375.png
+  /Users/kavinpasupathy/Documents/cowork/.claude/worktrees/e001-s01-sign-in-4e4d85/test-results/ui-account-password--accou-8fc9d-elds-and-one-primary-action-ui-1280/account-password-ui-1280.png
+
+## Files changed
+src/app/(app)/account/password/error.tsx
+src/app/(app)/account/password/loading.tsx
+src/app/(app)/account/password/page.tsx
+src/app/(app)/layout.tsx
+src/app/(app)/page.tsx
+src/app/(auth)/layout.tsx
+src/app/(auth)/sign-in/error.tsx
+src/app/(auth)/sign-in/loading.tsx
+src/app/(auth)/sign-in/page.tsx
+src/components/auth/error-summary.tsx
+src/components/auth/form-skeleton.tsx
+src/components/auth/password-form.tsx
+src/components/auth/redirect.ts
+src/components/auth/route-error.tsx
+src/components/auth/sign-in-form.tsx
+src/components/auth/text-field.tsx
+src/components/shell/draft-keeper.tsx
+src/components/shell/drafts.ts
+src/components/shell/flash-message.tsx
+src/components/shell/flash.ts
+src/components/shell/menu.ts
+src/components/shell/page-shell.tsx
+src/components/shell/role-menu.tsx
+src/components/shell/session-warning.tsx
+src/components/shell/sign-out-button.tsx
+src/components/ui/input.tsx
+src/components/ui/label.tsx
+tests/ui/account-password.spec.ts
+tests/ui/sign-in.spec.ts
+work/E-001-room-booking/evidence/E001-S01-T04.txt
+
+## Owns check
+$ owns-check.sh work/E-001-room-booking/tasks/E001-S01-T04.md <29 paths from git status>
+ALLOW src/app/(app)/account/password/error.tsx
+ALLOW src/app/(app)/account/password/loading.tsx
+ALLOW src/app/(app)/account/password/page.tsx
+ALLOW src/app/(app)/layout.tsx
+ALLOW src/app/(app)/page.tsx
+ALLOW src/app/(auth)/layout.tsx
+ALLOW src/app/(auth)/sign-in/error.tsx
+ALLOW src/app/(auth)/sign-in/loading.tsx
+ALLOW src/app/(auth)/sign-in/page.tsx
+ALLOW src/components/auth/error-summary.tsx
+ALLOW src/components/auth/form-skeleton.tsx
+ALLOW src/components/auth/password-form.tsx
+ALLOW src/components/auth/redirect.ts
+ALLOW src/components/auth/route-error.tsx
+ALLOW src/components/auth/sign-in-form.tsx
+ALLOW src/components/auth/text-field.tsx
+ALLOW src/components/shell/draft-keeper.tsx
+ALLOW src/components/shell/drafts.ts
+ALLOW src/components/shell/flash-message.tsx
+ALLOW src/components/shell/flash.ts
+ALLOW src/components/shell/menu.ts
+ALLOW src/components/shell/page-shell.tsx
+ALLOW src/components/shell/role-menu.tsx
+ALLOW src/components/shell/session-warning.tsx
+ALLOW src/components/shell/sign-out-button.tsx
+ALLOW src/components/ui/input.tsx
+ALLOW src/components/ui/label.tsx
+ALLOW tests/ui/account-password.spec.ts
+ALLOW tests/ui/sign-in.spec.ts
+owns-check exit: 0
