@@ -14,8 +14,8 @@ exit: 0
 
  Test Files  11 passed (11)
       Tests  85 passed (85)
-   Start at  21:51:47
-   Duration  495ms (transform 275ms, setup 0ms, import 737ms, tests 617ms, environment 1ms)
+   Start at  22:45:38
+   Duration  504ms (transform 320ms, setup 0ms, import 853ms, tests 603ms, environment 1ms)
 
 $ DATABASE_URL_WEB=$TEST_DATABASE_URL_WEB DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm vitest run tests/unit/data/sign-in-attempt.test.ts
 exit: 0
@@ -25,8 +25,8 @@ exit: 0
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  21:51:48
-   Duration  249ms (transform 29ms, setup 0ms, import 77ms, tests 97ms, environment 0ms)
+   Start at  22:45:39
+   Duration  247ms (transform 31ms, setup 0ms, import 79ms, tests 94ms, environment 0ms)
 
 $ bash scripts/ci/check-auth-in-actions.sh
 exit: 0
@@ -59,11 +59,12 @@ room-booking@0.0.0 /Users/kavinpasupathy/Documents/cowork/.claude/worktrees/e001
 
 3 packages
 
+$ node scripts/gen-rules-doc.ts --strict
+exit: 0
+Wrote 1 rules doc(s) to docs/rules/. Warnings: 0.
+
 $ APP_ORIGIN=http://localhost:3000 pnpm build
 exit: 0
-   7 | ...The logger writes to stdout. Edge has no stdout, so skip there.
->  8 | ...(typeof process === 'undefined' || !process.stdout) return;
-     |                                        ^^^^^^^^^^^^^^
    9 | ...st { logger } = await import('@/lib/logger');
   10 | ...st header = request.headers['x-request-id'];
   11 | ...st requestId = (Array.isArray(header) ? header[0] : header) ?? 'unknown';
@@ -74,8 +75,11 @@ Ecmascript file had an error
   Finalizing page optimization ...
 
 Route (app)
-┌ ƒ /_not-found
-└ ƒ /api/health
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /account/password
+├ ƒ /api/health
+└ ƒ /sign-in
 
 
 ƒ Proxy (Middleware)
@@ -92,6 +96,8 @@ Route (app)
 - Round 2: `clearFailures(emailHash)` added to `src/data/sign-in-attempt.ts` (in owns). `changePassword` calls it for the user key after `setOwnPassword`. `app_web` already holds DELETE on `sign_in_attempts`.
 - Round 2: `fieldErrorsFrom` takes `(error, copy, requestId)` and never returns zod text. Unmapped fields and over-length values give the `internal` copy under the `form` key.
 - Round 2: `returnTo` is parsed apart with `checkedReturnTo`. `SignInInput.omit({ returnTo: true })` validates email and password.
+
+- CI fix: TSDoc added to `RETRY_AFTER_SECONDS` in `src/domain/auth/rules.ts` (@remarks, @example, @ears E-001/AC-48). No logic change. `gen-rules-doc.ts --strict` reports 0 warnings. It regenerated `docs/rules/auth.md` (T-06, left in place, not listed below).
 
 ## Files changed
 src/domain/auth/rules.ts
@@ -122,32 +128,8 @@ src/data/sign-in-attempt.ts
 tests/unit/data/sign-in-attempt.test.ts
 work/E-001-room-booking/evidence/E001-S01-T03.txt
 
+
 ## Owns check
-$ owns-check.sh work/E-001-room-booking/tasks/E001-S01-T03.md <26 paths from git status>
-ALLOW src/data/sign-in-attempt.ts
-ALLOW tests/unit/data/sign-in-attempt.test.ts
-ALLOW src/app/(app)/account/password/actions.ts
-ALLOW src/app/(auth)/sign-in/actions.ts
-ALLOW src/app/api/health/route.ts
+$ owns-check.sh work/E-001-room-booking/tasks/E001-S01-T03.md src/domain/auth/rules.ts
 ALLOW src/domain/auth/rules.ts
-ALLOW src/lib/auth/change-password.ts
-ALLOW src/lib/auth/client-ip.ts
-ALLOW src/lib/auth/cookie.ts
-ALLOW src/lib/auth/form-state.ts
-ALLOW src/lib/auth/password.ts
-ALLOW src/lib/auth/return-to.ts
-ALLOW src/lib/auth/session.ts
-ALLOW src/lib/auth/sign-in.ts
-ALLOW src/lib/auth/token.ts
-ALLOW tests/unit/domain/auth/rules.test.ts
-ALLOW tests/unit/lib/auth/change-password.test.ts
-ALLOW tests/unit/lib/auth/client-ip.test.ts
-ALLOW tests/unit/lib/auth/cookie.test.ts
-ALLOW tests/unit/lib/auth/form-state.test.ts
-ALLOW tests/unit/lib/auth/health-route.test.ts
-ALLOW tests/unit/lib/auth/password.test.ts
-ALLOW tests/unit/lib/auth/return-to.test.ts
-ALLOW tests/unit/lib/auth/session.test.ts
-ALLOW tests/unit/lib/auth/sign-in.test.ts
-ALLOW tests/unit/lib/auth/token.test.ts
 owns-check exit: 0

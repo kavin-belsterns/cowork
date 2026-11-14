@@ -287,3 +287,25 @@ Approve and commit. Round limit reached. Issue 1 and suggestion 1 carried to "Op
 | T-06 | R1-S4 | src/domain/auth/rules.ts | `RETRY_AFTER_SECONDS` has no `@ears` tag, so docs/rules/auth.md shows "-". | Minor |
 | T-06 | R2-1 | docs/workflows/E-001-room-booking.md | No-forced-change branch goes to the role home; the code opens the checked return path first when present. | Minor |
 | T-06 | R2-S1 | evidence E001-S01-T06.txt | "Files changed" omits docs/rules/auth.md. | Minor |
+
+## E-001/S-01/T-03 story-check fix (CI on PR #103)
+
+Cause: CI step "Rules docs are up to date" failed: `RETRY_AFTER_SECONDS` had no `@ears` tag. Fix pass, not a third review round.
+Reviewer: bls-engineering:reviewer. Verdict: **Needs Discussion**, Approve once `ci.yml` stays out of the T-03 commit.
+
+| # | Check | Result |
+|---|---|---|
+| 1 | Evidence | pass. 11 commands, all `exit: 0`, including `node scripts/gen-rules-doc.ts --strict` with 0 warnings. Fresh run after the edit. |
+| 2 | Owned files | fail only for `.github/workflows/ci.yml`, a lead edit made during the review. |
+| 3 | Contract diff | pass against origin/main 4a94c17. |
+| 4 | EARS coverage | n/a |
+| 5 | Standards | pass. Every export in rules.ts has `@remarks`, `@example`, `@ears`. |
+| 6 | Overrides | pass. |
+
+### Suggestions
+| # | File | Line | Suggestion | Category |
+|---|---|---|---|---|
+| 1 | src/domain/auth/rules.ts | 14 | `@remarks` could say 900 s is the longest wait under the sliding window, and that password change uses it too. | Docs |
+
+### Lead action
+`ci.yml` is a separate lead commit (`Work-Item: E-001/S-01`), approved by the S-00 session: CI connected as NOLOGIN `app_web`, so S-01 DB tests could not log in. It now uses `app_web_login` and `app_worker_login`, which inherit the app roles. T-03 commits `rules.ts` only. Suggestion 1 carried to "Open review items".

@@ -8,7 +8,13 @@ const HOUR_MS = 60 * MINUTE_MS;
 
 export const LOCKOUT_FAILURES = 5;
 export const LOCKOUT_WINDOW_MS = 15 * MINUTE_MS;
-/** Retry-After for a lock, in seconds. Derived from the window so the two cannot drift. */
+/**
+ * Retry-After for a lock, in seconds. Derived from the window so the two cannot drift.
+ *
+ * @remarks A locked sign-in answers with Retry-After set to the 15 minute window, which is 900 seconds.
+ * @example RETRY_AFTER_SECONDS is 900.
+ * @ears E-001/AC-48
+ */
 export const RETRY_AFTER_SECONDS = LOCKOUT_WINDOW_MS / 1000;
 export const IP_DELAY_FROM = 30;
 export const IP_BLOCK_FROM = 100;
