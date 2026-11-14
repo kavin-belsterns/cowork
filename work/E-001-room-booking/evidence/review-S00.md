@@ -143,3 +143,22 @@ Suggestions:
 ## E-001/S-00 story check fix (lead, 2026-11-14)
 Story re-run with the test DB up found `tests/integration/contracts/migration.test.ts` failing 1 of 10. Earlier passes came from the DB being offline: the live block returned early and passed. CI on PR #100 (real DB) failed on the same file.
 Fixed in T-05 by the test-engineer: one transaction per forbidden audit statement; the live block now fails when it cannot connect (no fallback URL, no early return). Lead verified: unreachable DB gives exit 1, test DB gives 9 of 9 passing. The T-05 card done list now includes `tests/integration/contracts`.
+
+## E-001/S-00 story pass round 1
+Verdict: Request Changes (reviewer subagent, read only, HEAD 69559de). All spec section 6 house tests exist. Token contrast passes WCAG 2.2 AA in light and dark. Proxy CSP, headers and time helper approved.
+
+| # | File | Issue | Severity | Lead action |
+|---|---|---|---|---|
+| 1 | postcss.config.mjs missing | Tailwind 4 never compiles | Major | T-04 fix round |
+| 2 | package.json, components.json | shadcn deps and `cn` missing; hand-written button | Major | T-04 fix round |
+| 3 | src/app/global-error.tsx | Reference not findable in logs (logging.md RC3) | Major | T-04 fix round (instrumentation.ts) |
+| 4 | .githooks/* | Not in any card owns | Minor | Accepted: lead-installed by eng-build step 1 (install-git-hooks.sh). Noted in T-01 card |
+| 5 | specs/S00-contracts.md | Spec owns drifted from cards | Minor | Lead aligned spec owns and added `pnpm build` to section 8 |
+| 6 | tests/integration/contracts/migration.test.ts | Raw-SQL objects checked as text, not live catalog | Minor | T-05 follow-up |
+| 7 | vitest.config.ts | DATABASE_URL_MIGRATOR fallback hides the guard | Minor | T-05 follow-up (card owns vitest.config.ts for this fix) |
+| 8 | src/components/ui/button.tsx | transition without motion-safe | Minor | T-04 fix round |
+Suggestion 2 (nonce needs dynamic rendering) taken into T-04. Suggestions 3, 4, 6 declined: Minor, not needed for build. Suggestion 5 taken with item 5.
+
+## E-001/S-00/T-04 story fix round (lead, 2026-11-14)
+ui-engineer closed story items 1, 2, 3, 8 and suggestion 2. All 6 done commands exit 0 including `pnpm build`; built CSS contains the token utilities (`--primary`, `.bg-primary`). Story review round 2 re-checks these.
+Open item: `pnpm build` prints 2 Edge runtime warnings (`process.stdout` in `src/lib/logger.ts`, reached from `src/instrumentation.ts`). Build passes. Fix needs a `NEXT_RUNTIME` guard in `src/lib/env.ts` or `src/lib/logger.ts` (T-01 files). Carried to the T-05 follow-up card.

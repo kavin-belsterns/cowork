@@ -19,6 +19,15 @@ owns:
   - Dockerfile
   - docker-compose.yml
   - components.json
+  - postcss.config.mjs
+  - prisma.config.ts
+  - pnpm-workspace.yaml
+  - next-env.d.ts
+  - .npmrc
+  - .dockerignore
+  - src/proxy.ts
+  - src/instrumentation.ts
+  - src/lib/utils.ts
   - prisma/**
   - src/contracts/**
   - src/lib/db.ts
@@ -161,7 +170,8 @@ Test seed `prisma/seed.ts`: 2 offices (`Asia/Kolkata`, `Europe/London`), hours M
 | `bash scripts/ci/check-versions.sh` | PASS |
 | `pnpm vitest run tests/unit/contracts tests/unit/lib tests/integration/contracts tests/integration/house` | all pass |
 | `pnpm docs:openapi && git diff --exit-code docs/api/openapi.yaml` | exit 0 after commit |
-| `docker compose config` | exit 0 |
+| `APP_ORIGIN=http://localhost:3000 pnpm build` | exit 0, Tailwind CSS emitted |
+| `docker compose config -q` (with placeholder env) | exit 0 |
 
 ## Tasks
 | Task | Type | Specialist | Section | Note |

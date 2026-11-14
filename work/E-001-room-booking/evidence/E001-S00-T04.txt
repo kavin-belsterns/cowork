@@ -1,3 +1,9 @@
+$ pnpm install --frozen-lockfile
+exit: 0
+✓ Lockfile passes supply-chain policies (verified 1m ago)
+Lockfile is up to date, resolution step is skipped
+Done in 19ms using pnpm v12.18.0
+
 $ pnpm tsc --noEmit
 exit: 0
 
@@ -13,10 +19,42 @@ $ bash scripts/ci/check-test-tree.sh
 exit: 0
 PASS check-test-tree: no test files under src/
 
+$ APP_ORIGIN=http://localhost:3000 pnpm build
+exit: 0
+   7 | ...The logger writes to stdout. Edge has no stdout, so skip there.
+>  8 | ...(typeof process === 'undefined' || !process.stdout) return;
+     |                                        ^^^^^^^^^^^^^^
+   9 | ...st { logger } = await import('@/lib/logger');
+  10 | ...st header = request.headers['x-request-id'];
+  11 | ...st requestId = (Array.isArray(header) ? header[0] : header) ?? 'unknown';
+
+Ecmascript file had an error
+
+
+  Finalizing page optimization ...
+
+
+Route (pages)
+─ ○ /404
+
+ƒ Proxy (Middleware)
+
+○  (Static)  prerendered as static content
+
+
+$ grep built CSS for token utilities (.next/static/chunks/408lddxumt4s1.css)
+--primary:#131922
+.bg-primary{background-color:var(--primary)}
+.bg-background{background-color:var(--background)}
+
+Note: --color-primary is not in the built CSS by name. The @theme tokens compile to --primary and utilities read var(--primary). Token utilities are present.
+Note: pnpm build prints 2 Edge warnings (process.stdout in src/lib/logger.ts, imported by src/instrumentation.ts). Exit is 0. Fix needs a NEXT_RUNTIME check, which eslint blocks (process.env) outside src/lib/env.ts. Both files are outside the T-04 owns list. Lead decision needed.
+
 ## Files changed
-components.json
-src/app/globals.css
+package.json
+pnpm-lock.yaml
+postcss.config.mjs
+src/lib/utils.ts
+src/instrumentation.ts
 src/app/layout.tsx
-src/app/global-error.tsx
-src/app/not-found.tsx
 src/components/ui/button.tsx
