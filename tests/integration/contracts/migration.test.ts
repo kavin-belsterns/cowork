@@ -124,8 +124,8 @@ describe('Database Migration & Raw-SQL Schema Verification', () => {
 
         // First confirmed booking
         await client.query(
-          `INSERT INTO bookings (id, room_id, user_id, title, starts_at, ends_at, attendees, status, updated_at)
-           VALUES ('0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f9991', $1, $2, 'Meeting 1', '2026-11-16 10:00:00+00', '2026-11-16 11:00:00+00', 2, 'confirmed', NOW())`,
+          `INSERT INTO bookings (id, room_id, owner_id, starts_at, ends_at, attendees, status, updated_at)
+           VALUES ('0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f9991', $1, $2, '2026-11-16 10:00:00+00', '2026-11-16 11:00:00+00', 2, 'confirmed', NOW())`,
           [testRoomId, userAlice],
         );
 
@@ -133,8 +133,8 @@ describe('Database Migration & Raw-SQL Schema Verification', () => {
         let errorCode = '';
         try {
           await client.query(
-            `INSERT INTO bookings (id, room_id, user_id, title, starts_at, ends_at, attendees, status, updated_at)
-             VALUES ('0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f9992', $1, $2, 'Meeting 2', '2026-11-16 10:30:00+00', '2026-11-16 11:30:00+00', 2, 'confirmed', NOW())`,
+            `INSERT INTO bookings (id, room_id, owner_id, starts_at, ends_at, attendees, status, updated_at)
+             VALUES ('0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f9992', $1, $2, '2026-11-16 10:30:00+00', '2026-11-16 11:30:00+00', 2, 'confirmed', NOW())`,
             [testRoomId, userAlice],
           );
         } catch (err: unknown) {
@@ -154,14 +154,14 @@ describe('Database Migration & Raw-SQL Schema Verification', () => {
       try {
         const auditId = '0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f9990';
         await client.query(
-          `INSERT INTO audit_events (id, action, entity_type, entity_id, actor_id, actor_role)
-           VALUES ($1, 'created', 'booking', '0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f9991', '0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f9998', 'employee')`,
+          `INSERT INTO audit_events (id, action, entity_type, entity_id, actor_id)
+           VALUES ($1, 'created', 'booking', '0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f9991', '0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f9998')`,
           [auditId],
         );
 
         // Update must fail
         await expect(
-          client.query(`UPDATE audit_events SET actor_role = 'platform_admin' WHERE id = $1`, [auditId]),
+          client.query(`UPDATE audit_events SET action = 'changed' WHERE id = $1`, [auditId]),
         ).rejects.toThrow(/audit_events is append only/);
 
         // Delete must fail
