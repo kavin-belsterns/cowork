@@ -1,0 +1,41 @@
+$ pnpm tsc --noEmit
+exit: 0
+
+
+$ pnpm lint
+exit: 0
+$ eslint .
+
+$ DATABASE_URL_WEB=$TEST_DATABASE_URL_WEB DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm vitest run tests/unit/data/session.test.ts tests/unit/data/sign-in-attempt.test.ts
+exit: 0
+
+ RUN  v4.1.12 /Users/kavinpasupathy/Documents/cowork/.claude/worktrees/e001-s01-sign-in-4e4d85
+
+
+ Test Files  2 passed (2)
+      Tests  23 passed (23)
+   Start at  17:51:45
+   Duration  311ms (transform 66ms, setup 0ms, import 185ms, tests 225ms, environment 0ms)
+
+$ git diff --exit-code origin/feat/E001-S00-contracts -- prisma src/contracts
+exit: 0
+
+
+$ bash scripts/ci/check-no-console.sh
+exit: 0
+PASS check-no-console: no console calls outside logger
+
+## Files changed
+src/data/session.ts
+src/data/sign-in-attempt.ts
+tests/unit/data/session.test.ts
+tests/unit/data/sign-in-attempt.test.ts
+work/E-001-room-booking/evidence/E001-S01-T02.txt
+
+## Owns check
+$ owns-check.sh work/E-001-room-booking/tasks/E001-S01-T02.md src/data/session.ts src/data/sign-in-attempt.ts tests/unit/data/session.test.ts tests/unit/data/sign-in-attempt.test.ts
+ALLOW src/data/session.ts
+ALLOW src/data/sign-in-attempt.ts
+ALLOW tests/unit/data/session.test.ts
+ALLOW tests/unit/data/sign-in-attempt.test.ts
+owns-check exit: 0
