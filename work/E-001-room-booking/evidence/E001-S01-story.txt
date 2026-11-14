@@ -1,25 +1,28 @@
 # E-001/S-01 story checks (spec section 8)
 
-Run on 2026-11-14 at commit ea43ec3 (T-05), base origin/main 4a94c17, against the live test database e001_s01 (web role app_web).
-Commits after ea43ec3 change only docs/ and work/ (T-06 docs and review records). No file under src/, tests/, prisma/ or package.json changed, so these results still hold for the PR head.
+Run on 2026-11-14 at commit ebaba01, base origin/main 4a94c17, against the live test database e001_s01.
+The web connection logs in as app_web_login, which inherits the NOLOGIN app_web role. CI uses the same role (commit ebaba01).
+
+This replaces the first run at ea43ec3. CI on PR #103 then failed at "Rules docs are up to date": RETRY_AFTER_SECONDS had no @ears tag, and the local run did not include that check. It is now block 5 below.
 
 Extra checks beyond section 8:
+- `node scripts/gen-rules-doc.ts --strict` plus a clean `git status --porcelain docs/rules`, as in CI.
 - `pnpm ls next @prisma/client prisma` (versions.md RC4).
-- `/` with no session must answer 2xx or 3xx, never 404, because the CI Playwright webServer waits on `/` (S-00 commit 294154b). Result: 307 to /sign-in.
+- `/` with no session must answer 2xx or 3xx, never 404, because the CI Playwright webServer waits on `/`. Result: 307 to /sign-in.
 - The DB-backed unit and integration suites fail (exit 1), never skip, when the database is unreachable. Proof: T-02 lead check and the T-05 evidence Notes block.
 
 Totals: unit 109 passed, integration 42 passed, UI and e2e 172 passed (ui-375, ui-768, ui-1280 and e2e projects).
 
 $ git log --oneline -1 && git rev-parse --short origin/main
 exit: 0
-ea43ec3 test(auth): sign-in integration tests and e2e per EARS line
+ebaba01 ci: log in as app_web_login and app_worker_login, keep app roles NOLOGIN
 4a94c17
 
 $ pnpm install --frozen-lockfile
 exit: 0
-✓ Lockfile passes supply-chain policies (verified 18m ago)
+✓ Lockfile passes supply-chain policies (verified 28m ago)
 Lockfile is up to date, resolution step is skipped
-Done in 26ms using pnpm v12.18.0
+Done in 29ms using pnpm v12.18.0
 
 $ pnpm tsc --noEmit
 exit: 0
@@ -29,6 +32,10 @@ $ pnpm lint
 exit: 0
 $ eslint .
 
+$ node scripts/gen-rules-doc.ts --strict && test -z "$(git status --porcelain docs/rules)"
+exit: 0
+Wrote 1 rules doc(s) to docs/rules/. Warnings: 0.
+
 $ DATABASE_URL_WEB=$TEST_DATABASE_URL_WEB DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm vitest run tests/unit/domain/auth tests/unit/lib/auth tests/unit/data/session.test.ts tests/unit/data/sign-in-attempt.test.ts
 exit: 0
 
@@ -37,8 +44,8 @@ exit: 0
 
  Test Files  13 passed (13)
       Tests  109 passed (109)
-   Start at  22:38:14
-   Duration  609ms (transform 311ms, setup 0ms, import 941ms, tests 1.37s, environment 1ms)
+   Start at  22:48:28
+   Duration  610ms (transform 490ms, setup 0ms, import 1.24s, tests 1.17s, environment 1ms)
 
 $ DATABASE_URL_WEB=$TEST_DATABASE_URL_WEB DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm vitest run tests/integration/auth
 exit: 0
@@ -48,31 +55,31 @@ exit: 0
 
  Test Files  3 passed (3)
       Tests  42 passed (42)
-   Start at  22:38:14
-   Duration  1.03s (transform 144ms, setup 0ms, import 326ms, tests 1.45s, environment 0ms)
+   Start at  22:48:29
+   Duration  1.06s (transform 123ms, setup 0ms, import 325ms, tests 1.54s, environment 0ms)
 
 $ PORT=3101 BASE_URL=http://localhost:3101 APP_ORIGIN=http://localhost:3101 DATABASE_URL_WEB=$TEST_DATABASE_URL_WEB DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm playwright test tests/ui/sign-in.spec.ts tests/ui/account-password.spec.ts tests/e2e/E-001/S01-sign-in.spec.ts
 exit: 0
-  ✓  153 [ui-1280] › tests/ui/account-password.spec.ts:472:3 › PageShell menu › Sign out ends the session, clears the cookie and returns to /sign-in (671ms)
-  ✓  157 [ui-768] › tests/ui/account-password.spec.ts:557:3 › PageShell draft keeper › keeps a draft for the same user on the same page (310ms)
-  ✓  156 [ui-375] › tests/ui/account-password.spec.ts:514:3 › /account/password keyboard and fields › sets autocomplete on both fields and allows paste (563ms)
-  ✓  158 [ui-1280] › tests/ui/account-password.spec.ts:489:3 › /account/password keyboard and fields › Tab reaches the skip link, the menu, then current password, new password and Save password (560ms)
-  ✓  159 [ui-768] › tests/ui/account-password.spec.ts:568:3 › PageShell draft keeper › clears drafts at sign-out (467ms)
-  ✓  161 [ui-1280] › tests/ui/account-password.spec.ts:514:3 › /account/password keyboard and fields › sets autocomplete on both fields and allows paste (261ms)
-  ✓  160 [ui-375] › tests/ui/account-password.spec.ts:531:3 › PageShell session warning › E-001/AC-71 warns 5 minutes before the end, then asks the user to sign in again (831ms)
-  ✓  163 [ui-1280] › tests/ui/account-password.spec.ts:531:3 › PageShell session warning › E-001/AC-71 warns 5 minutes before the end, then asks the user to sign in again (550ms)
-  ✓  165 [ui-1280] › tests/ui/account-password.spec.ts:557:3 › PageShell draft keeper › keeps a draft for the same user on the same page (298ms)
-  ✓  162 [ui-768] › tests/ui/account-password.spec.ts:585:3 › PageShell draft keeper › clears drafts when another user signs in (1.1s)
-  ✓  164 [ui-375] › tests/ui/account-password.spec.ts:557:3 › PageShell draft keeper › keeps a draft for the same user on the same page (917ms)
-  ✓  167 [ui-768] › tests/ui/account-password.spec.ts:601:3 › PageShell draft keeper › never stores a password field (573ms)
-  ✓  168 [ui-375] › tests/ui/account-password.spec.ts:568:3 › PageShell draft keeper › clears drafts at sign-out (492ms)
-  ✓  166 [ui-1280] › tests/ui/account-password.spec.ts:568:3 › PageShell draft keeper › clears drafts at sign-out (1.1s)
-  ✓  170 [ui-1280] › tests/ui/account-password.spec.ts:585:3 › PageShell draft keeper › clears drafts when another user signs in (412ms)
-  ✓  171 [ui-1280] › tests/ui/account-password.spec.ts:601:3 › PageShell draft keeper › never stores a password field (245ms)
-  ✓  169 [ui-375] › tests/ui/account-password.spec.ts:585:3 › PageShell draft keeper › clears drafts when another user signs in (1.0s)
-  ✓  172 [ui-375] › tests/ui/account-password.spec.ts:601:3 › PageShell draft keeper › never stores a password field (558ms)
+  ✓  154 [ui-768] › tests/ui/account-password.spec.ts:489:3 › /account/password keyboard and fields › Tab reaches the skip link, the menu, then current password, new password and Save password (609ms)
+  ✓  157 [ui-375] › tests/ui/account-password.spec.ts:514:3 › /account/password keyboard and fields › sets autocomplete on both fields and allows paste (265ms)
+  ✓  158 [ui-768] › tests/ui/account-password.spec.ts:514:3 › /account/password keyboard and fields › sets autocomplete on both fields and allows paste (271ms)
+  ✓  156 [ui-1280] › tests/ui/account-password.spec.ts:531:3 › PageShell session warning › E-001/AC-71 warns 5 minutes before the end, then asks the user to sign in again (885ms)
+  ✓  161 [ui-1280] › tests/ui/account-password.spec.ts:557:3 › PageShell draft keeper › keeps a draft for the same user on the same page (315ms)
+  ✓  159 [ui-375] › tests/ui/account-password.spec.ts:531:3 › PageShell session warning › E-001/AC-71 warns 5 minutes before the end, then asks the user to sign in again (866ms)
+  ✓  160 [ui-768] › tests/ui/account-password.spec.ts:531:3 › PageShell session warning › E-001/AC-71 warns 5 minutes before the end, then asks the user to sign in again (902ms)
+  ✓  164 [ui-768] › tests/ui/account-password.spec.ts:557:3 › PageShell draft keeper › keeps a draft for the same user on the same page (301ms)
+  ✓  163 [ui-375] › tests/ui/account-password.spec.ts:557:3 › PageShell draft keeper › keeps a draft for the same user on the same page (926ms)
+  ✓  162 [ui-1280] › tests/ui/account-password.spec.ts:568:3 › PageShell draft keeper › clears drafts at sign-out (1.1s)
+  ✓  165 [ui-768] › tests/ui/account-password.spec.ts:568:3 › PageShell draft keeper › clears drafts at sign-out (794ms)
+  ✓  168 [ui-768] › tests/ui/account-password.spec.ts:585:3 › PageShell draft keeper › clears drafts when another user signs in (473ms)
+  ✓  166 [ui-375] › tests/ui/account-password.spec.ts:568:3 › PageShell draft keeper › clears drafts at sign-out (854ms)
+  ✓  167 [ui-1280] › tests/ui/account-password.spec.ts:585:3 › PageShell draft keeper › clears drafts when another user signs in (1.1s)
+  ✓  169 [ui-768] › tests/ui/account-password.spec.ts:601:3 › PageShell draft keeper › never stores a password field (578ms)
+  ✓  171 [ui-1280] › tests/ui/account-password.spec.ts:601:3 › PageShell draft keeper › never stores a password field (270ms)
+  ✓  170 [ui-375] › tests/ui/account-password.spec.ts:585:3 › PageShell draft keeper › clears drafts when another user signs in (750ms)
+  ✓  172 [ui-375] › tests/ui/account-password.spec.ts:601:3 › PageShell draft keeper › never stores a password field (259ms)
 
-  172 passed (30.2s)
+  172 passed (30.9s)
 
 $ bash scripts/ci/check-auth-in-actions.sh
 exit: 0
@@ -138,6 +145,6 @@ exit: 0
 ▲ Next.js 16.4.6
 - Local:         http://localhost:3000
 - Network:       http://192.168.1.7:3000
-✓ Ready in 49ms
+✓ Ready in 50ms
 ✓ Running next.config.ts took 64ms
 
