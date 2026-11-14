@@ -181,3 +181,39 @@ Approve and commit. Suggestion 1 carried.
 | T-04 | R1-2 | src/components/ui/input.tsx, label.tsx | New shared shadcn components added by S-01, outside the story owns, so ui.md RC3 holds. No S-00 file edited, no dependency added. | Minor |
 | T-04 | R1-S3 | src/components/auth/password-form.tsx | "Use 12 to 128 characters." is not a spec section 2 copy key (with T-03 R1-4). | Minor |
 | T-04 | R2-S1 | tests/ui/account-password.spec.ts | Expired-session test does not prove the form's own clear path on its own. | Minor |
+
+## E-001/S-01/T-05 round 1
+
+Reviewer: bls-engineering:reviewer. Verdict: **Approve**.
+
+| # | Check | Result |
+|---|---|---|
+| 1 | Evidence | pass. 6 commands, all `exit: 0`. The one `exit: 1` block is the planned DB-unreachable run under Notes. 42 integration tests, 7 e2e tests. |
+| 2 | Owned files | pass. 4 paths under `tests/integration/auth/` and the e2e spec match `owns`. No tracked changes. |
+| 3 | Contract diff | pass against origin/main 4a94c17. |
+| 4 | EARS coverage | pass for S-01. Full run fails for other stories (77 of 91 missing). None of AC-47, 48, 49, 71, 72, 84, 85 missing. Each e2e test asserts its outcome (URL, copy, cookie, DB row). |
+| 5 | Standards | pass, with Minor issue 1. |
+| 6 | Overrides | pass. None. |
+
+Every spec section 6 integration item has a test (same 401 for unknown and wrong, 6th try 429 with `retry-after`, success clears count, inactive and temp expired only after verify, forced change blocks other keys, sign-out deletes row, change rotates token and deletes other sessions, audit row and rollback, IP limit, health status only).
+
+### Issues
+| # | File | Line | Issue | Severity |
+|---|---|---|---|---|
+| 1 | tests/e2e/E-001/S01-sign-in.spec.ts | 122-140 | AC-49 uses the seed row's `temp_password_expires_at` (seed time + 7 days). On a test DB seeded more than 7 days ago the test fails with a timeout that does not name the cause. False failure, not false pass. | Minor |
+
+### Suggestions
+| # | File | Line | Suggestion | Category |
+|---|---|---|---|---|
+| 1 | tests/e2e/E-001/S01-sign-in.spec.ts | 83-89 | `open()` detects hydration through React's internal `__reactProps` key. A React rename would time out every e2e test. | Reliability |
+| 2 | src/instrumentation.ts (S-00) | 9-11 | Build log shows "Ecmascript file had an error" for this file. Build exits 0. Cause UNVERIFIED. Check `onRequestError` compiles in production. | Out of scope |
+
+### Lead action
+Approve and commit. Issue 1 and both suggestions carried to "Open review items". CI seeds a fresh DB per run, so issue 1 affects only long-lived local test DBs.
+
+## Open review items (added at T-05)
+| Task | # | File | Issue | Severity |
+|---|---|---|---|---|
+| T-05 | 1 | tests/e2e/E-001/S01-sign-in.spec.ts | AC-49 depends on a seed less than 7 days old. Move the expiry forward inside the existing snapshot and restore. | Minor |
+| T-05 | S1 | tests/e2e/E-001/S01-sign-in.spec.ts | Hydration check uses React's internal `__reactProps` key. | Minor |
+| T-05 | S2 | src/instrumentation.ts (S-00) | "Ecmascript file had an error" in build output. Build passes. Cause unverified. | Minor |
