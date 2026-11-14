@@ -38,3 +38,37 @@ ALLOW docs/manual/E-001-room-booking.md
 ALLOW docs/rules/auth.md
 ALLOW docs/workflows/E-001-room-booking.md
 owns-check exit: 0
+
+## Story-check fix: rules doc regenerated (lead re-run, 2026-11-14)
+T-03 added the `@ears` tag to RETRY_AFTER_SECONDS (CI "Rules docs are up to date"). docs/rules/auth.md regenerated: its EARS cell is now E-001/AC-48. Done commands re-run:
+
+$ pnpm docs:all
+exit: 0
+$ pnpm docs:openapi && pnpm docs:rules && pnpm docs:erd
+$ tsx scripts/gen-openapi.ts
+Wrote docs/api/openapi.yaml
+$ node scripts/gen-rules-doc.ts
+Wrote 1 rules doc(s) to docs/rules/. Warnings: 0.
+$ prisma generate --generator markdown
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+
+✔ Generated prisma-markdown (4.0.0) to ./docs/db/erd.md in 8ms
+
+$ git status --short docs/
+exit: 0
+ M docs/rules/auth.md
+
+$ git diff --exit-code docs/api/openapi.yaml
+exit: 0
+
+
+$ bash scripts/ci/check-dashes.sh
+exit: 0
+PASS check-dashes: no em or en dashes in docs/ and work/
+
+## Owns check
+$ owns-check.sh work/E-001-room-booking/tasks/E001-S01-T06.md docs/rules/auth.md
+ALLOW docs/rules/auth.md
+owns-check exit: 0

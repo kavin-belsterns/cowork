@@ -3,7 +3,7 @@
 
 | Function | Summary | EARS |
 |---|---|---|
-| `RETRY_AFTER_SECONDS` | Retry-After for a lock, in seconds. Derived from the window so the two cannot drift. | - |
+| `RETRY_AFTER_SECONDS` | Retry-After for a lock, in seconds. Derived from the window so the two cannot drift. | E-001/AC-48 |
 | `windowStart` | Start of the failure window. A failure at exactly this instant still counts. | E-001/AC-48 |
 | `isLockedOut` | Whether an email hash is locked. | E-001/AC-48 |
 | `ipDecision` | What to do with a client IP, from the distinct email hashes it tried in 15 minutes. | E-001/AC-48 |
