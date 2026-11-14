@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# git commit-msg hook. Usage: commit-msg.sh <message-file>
+# Rejects a commit unless the subject is a Conventional Commit and a Work-Item trailer has a valid id.
+# On a branch like feat/E012-S03-x the trailer id must start with the branch id (E-012/S-03). Decision 18.
+# Sources: https://www.conventionalcommits.org/en/v1.0.0/ and https://git-scm.com/docs/githooks
+set -euo pipefail
+
+msg_file="${1:-}"
+[ -n "$msg_file" ] && [ -f "$msg_file" ] || { echo "commit-msg: no message file given." >&2; exit 1; }
+
+clean="$(grep -v '^#' "$msg_file" || true)"
+subject="$(printf '%s\n' "$clean" | sed -n '1p')"
+
+fail() {
+  printf '\ncommit-msg rejected: %s\nFix: %s\nSee standards/git.md.\n' "$1" "$2" >&2
+  exit 1
+}
+
+# Let git-generated messages through.
+case "$subject" in
+  "Merge "*|"Revert \""*|"fixup! "*|"squash! "*) exit 0 ;;
+esac
+
+types='feat|fix|refactor|perf|test|docs|build|ci|chore|style|revert'
+printf '%s\n' "$subject" | grep -Eq "^($types)(\([a-z0-9._/-]+\))?!?: [^ ].*" ||
+  fail "subject is not a Conventional Commit: '$subject'" \
+       "use 'type(scope): description'. Types: $(printf '%s' "$types" | tr '|' ' ')."
+
+len="$(printf '%s' "$subject" | wc -c | tr -d ' ')"
+[ "$len" -le 72 ] || fail "subject is $len characters. Limit is 72." "shorten the description."
+
+printf '%s\n' "$clean" | grep -Eq '^Work-Item: .+' ||
+  fail "missing 'Work-Item:' trailer." "add a line 'Work-Item: E-012/S-03/T-05'."
+
+item="$(printf '%s\n' "$clean" | grep -E '^Work-Item: ' | tail -n 1 | sed 's/^Work-Item: *//; s/ *$//')"
+printf '%s\n' "$item" | grep -Eq '^E-[0-9]{3}(/S-[0-9]{2}(/T-[0-9]{2})?)?$' ||
+  fail "bad Work-Item value '$item'." \
+       "use E-012, E-012/S-03 or E-012/S-03/T-05 (E three digits, S and T two digits)."
+
+# Branch id is a prefix of the trailer id: branch E012-S03 allows E-012/S-03 and E-012/S-03/T-05.
+branch="$(git symbolic-ref --short -q HEAD 2>/dev/null || true)"
+if printf '%s\n' "$branch" | grep -Eq '^(feat|fix|chore)/E[0-9]{3}(-S[0-9]{2}(-T[0-9]{2})?)?-'; then
+  bid="$(printf '%s\n' "$branch" | sed -E 's#^[a-z]+/(E[0-9]{3}(-S[0-9]{2}(-T[0-9]{2})?)?)-.*#\1#; s#-S#/S-#; s#-T#/T-#; s#^E#E-#')"
+  case "$item" in
+    "$bid"|"$bid"/*) ;;
+    *) fail "Work-Item '$item' is not inside branch id $bid ($branch)." "use a Work-Item equal to $bid or starting with $bid/." ;;
+  esac
+fi
+exit 0

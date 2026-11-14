@@ -1,0 +1,17 @@
+.git
+.github
+.githooks
+.next
+node_modules
+generated
+coverage
+playwright-report
+test-results
+tests
+work
+docs
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+.DS_Store

@@ -1,0 +1,37 @@
+# Purpose: upgrade bot with a minimum release age and grouped updates. Copy to .github/dependabot.yml in the client repo.
+# Rules: standards/versions.md. Exact pins stay exact. Majors are done by hand in one quarterly window.
+# Dependabot was chosen because Renovate has no source in the research reports. EVERY field below is UNVERIFIED.
+# The I report gives the policy (7 to 14 day minimum age) but did not fetch Dependabot docs. Check the options reference before use:
+# https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference (not fetched, from memory)
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    # UNVERIFIED field: cooldown. Waits this many days after a release before opening a PR.
+    cooldown:
+      default-days: 7
+    # UNVERIFIED field: ignore by update type. Majors wait for the quarterly window.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    # UNVERIFIED field: groups. One PR for all minor and patch updates.
+    groups:
+      minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    commit-message:
+      prefix: "chore(deps)"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]

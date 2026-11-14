@@ -1,0 +1,131 @@
+$ pnpm install --frozen-lockfile
+exit: 0
+✓ Lockfile passes supply-chain policies (verified 13m ago)
+Lockfile is up to date, resolution step is skipped
+Done in 22ms using pnpm v12.18.0
+
+$ pnpm tsc --noEmit
+exit: 0
+
+$ pnpm lint
+exit: 0
+$ eslint .
+
+$ pnpm prisma validate
+exit: 0
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+The schema at prisma/schema.prisma is valid 🚀
+
+$ pnpm vitest run tests/unit/contracts
+exit: 0
+
+ RUN  v4.1.12 /Users/kavinpasupathy/Documents/cowork
+
+
+ Test Files  13 passed (13)
+      Tests  805 passed (805)
+   Start at  14:57:49
+   Duration  445ms (transform 213ms, setup 0ms, import 966ms, tests 228ms, environment 1ms)
+
+
+$ bash scripts/ci/check-versions.sh
+exit: 0
+PASS check-versions: all dependencies pinned exact, pnpm-lock.yaml present
+
+$ bash scripts/ci/check-fk-index.sh
+exit: 0
+PASS check-fk-index: every foreign key has an index
+
+$ bash scripts/ci/check-no-console.sh
+exit: 0
+PASS check-no-console: no console calls outside logger
+
+## Installed versions (standards/versions.md RC4)
+$ pnpm ls next @prisma/client prisma zod typescript vitest eslint
+exit: 0
+next@16.4.6, @prisma/client@7.10.1, prisma@7.10.1, zod@4.6.7, typescript@6.0.3, vitest@4.1.12, eslint@10.15.0
+Node 26.13.1, pnpm 12.18.0. Prisma 7 names used: generator "prisma-client", connection and seed in prisma.config.ts.
+
+## Notes for the lead
+1. VERSION DEVIATION, needs an override ADR (versions.md RC2). typescript is 6.0.3, not 7.0.2 (7.x is over 90 days old). eslint-config-next 16.4.6 brings typescript-eslint 8.72.2, which throws "does not support TS 7.0", so pnpm lint cannot run on 7. I could not write the ADR (docs/adr is outside owns).
+2. Other pins: @playwright/test 1.64.1 (dispatch said 1.64, 1.65.1 exists). vitest 4.1.12 because 5.x first shipped 2026-09-03, 72 days ago. Every other package is the newest major at least 90 days old. eslint 10.15.0 prints peer warnings from jsx-a11y, react and import plugins (they declare up to eslint 9). Lint passes.
+3. pnpm install and every pnpm script need the sandbox off. pnpm 12 locks its store before each script and the store is outside the sandbox. All done commands ran with the sandbox disabled.
+4. Prisma 7 reads the seed from prisma.config.ts migrations.seed ("tsx prisma/seed.ts"). I did not add package.json prisma.seed because v7 does not read it. T-02 writes prisma/seed.ts.
+5. Prisma Client output is ../generated/prisma (gitignored, outside src so check-no-console never scans generated code). Import it as @generated/prisma/client. The alias is in tsconfig.json and vitest.config.ts. The domain lint block bans it.
+6. Gaps in owns for later tasks (package.json, postcss.config.mjs and next.config.ts are not theirs):
+   - T-04 needs shadcn packages (radix, clsx, tailwind-merge, class-variance-authority, lucide-react) in package.json and a postcss.config.mjs for Tailwind 4. tailwindcss, @tailwindcss/postcss and postcss are already pinned.
+   - T-03 owns the security headers per the spec, but next.config.ts is in T-01 owns. It holds only poweredByHeader, reactStrictMode and serverActions.bodySizeLimit 2mb. allowedOrigins, CSP and HSTS are still to do.
+   - T-05 needs nothing new: @axe-core/playwright 4.14.0 is pinned.
+7. src/lib/env.ts: the three DATABASE_URL_* values are optional and checked as URLs when set, so web does not need the migrator secret. requireEnv(name) throws naming the variable. APP_ORIGIN is required and must be scheme plus host only. LOG_LEVEL is optional (default info). An empty string counts as unset.
+8. Schema choices T-02 must honour:
+   - ids use @default(uuid(7)), made by Prisma Client, no DB default. Raw SQL inserts must supply ids.
+   - office_hours.weekday is ISO 1 to 7. opens_at and closes_at are time(0). T-02 adds CHECK (weekday BETWEEN 1 AND 7) beside CHECK (opens_at < closes_at).
+   - users.email has no Prisma @unique. T-02 adds unique lower(email).
+   - audit_events, sessions, sign_in_attempts, idempotency_keys and job_runs have no FKs to users or offices where the row is a snapshot or system row. sessions and idempotency_keys do have a user FK.
+   - created_by is a nullable plain uuid with no FK on user-edited tables.
+   - Role enum has 4 values. "system" exists only in permissions.ts (Principal).
+   - Every raw-SQL object is marked with a /// comment naming T-02 in schema.prisma. Roles and grants are listed at the end of the file.
+9. ci.yml expects T-02's migration to create roles app_web and app_worker. A CI step sets their test passwords with psql. CI db user is app_owner. release.yml is copied unchanged from the profile.
+10. Contract choices: booking and series times travel as ISO instants (ADR-0009). VisitSeenInput has no version (a repeat dismiss is harmless, design.md). Weekday, floor (-999 to 999), attendees (1 to 1000) and room size (1 to 1000) bounds are mine, not in the spec. Phone uses the CSV pattern ^\+?[0-9 ]{6,30}$ for single entries too.
+11. Not run or not proven: docker build (Dockerfile untested), pnpm docs:erd (prisma-markdown 4.0.0 with Prisma 7 untested, it writes docs/db/erd.md which is outside owns), pnpm docs:openapi (T-03). docker compose config -q passes with dummy values for the required variables.
+12. An earlier local prisma generate left an ignored generated/ folder. Safe to delete.
+13. Round 2: items 1, 2, 3, 5, 6 fixed. scopeFor and requireScope now take (session, permission, resource). visit.seen is host only for every role. Item 4 is covered by ADR 0015 (no schema change). No logger test added (T-05 owns tests/unit/lib).
+
+## Files changed
+.dockerignore
+.env.example
+.github/dependabot.yml
+.github/workflows/ci.yml
+.github/workflows/release.yml
+.gitignore
+.npmrc
+.nvmrc
+Dockerfile
+docker-compose.yml
+eslint.config.mjs
+next-env.d.ts
+next.config.ts
+package.json
+playwright.config.ts
+pnpm-lock.yaml
+pnpm-workspace.yaml
+prisma.config.ts
+prisma/schema.prisma
+scripts/gen-rules-doc.ts
+src/contracts/auth.ts
+src/contracts/booking.ts
+src/contracts/common.ts
+src/contracts/history.ts
+src/contracts/import.ts
+src/contracts/office.ts
+src/contracts/permissions.ts
+src/contracts/report.ts
+src/contracts/room.ts
+src/contracts/series.ts
+src/contracts/user.ts
+src/contracts/visit.ts
+src/lib/env.ts
+src/lib/errors.ts
+src/lib/http.ts
+src/lib/idempotency.ts
+src/lib/logger.ts
+tests/unit/contracts/auth.test.ts
+tests/unit/contracts/booking.test.ts
+tests/unit/contracts/common.test.ts
+tests/unit/contracts/harness.ts
+tests/unit/contracts/history.test.ts
+tests/unit/contracts/import.test.ts
+tests/unit/contracts/office.test.ts
+tests/unit/contracts/permissions.test.ts
+tests/unit/contracts/report.test.ts
+tests/unit/contracts/room.test.ts
+tests/unit/contracts/series.test.ts
+tests/unit/contracts/user.test.ts
+tests/unit/contracts/version.test.ts
+tests/unit/contracts/visit.test.ts
+tsconfig.json
+tsdoc.json
+vitest.config.ts
+work/E-001-room-booking/evidence/E001-S00-T01.txt
