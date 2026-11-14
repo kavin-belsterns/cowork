@@ -25,3 +25,29 @@ Open review items carried to the PR:
 | 2 | src/lib/logger.ts:13 | camelCase name and `query` redaction untested | Minor | S-00 T-05 (`tests/unit/lib/logger.test.ts`) |
 
 Suggestion noted for S-12: log the job under `job`, not `job_name`, which the redaction now hides.
+
+## E-001/S-00/T-02 round 1
+Verdict: Request Changes (reviewer subagent, read only). Catalog of e001_test confirmed: exclusion constraint identical to ADR-0006, btree_gist, partial uniques, 10 CHECKs, audit triggers, NOLOGIN roles, grants per spec, no TRUNCATE.
+
+| # | File | Issue | Severity | Lead action |
+|---|---|---|---|---|
+| 1 | src/lib/audit.ts:1-7 | No `import 'server-only'` on a DB-writing module | Major | Re-dispatch: fix |
+| 2 | src/lib/audit.ts:67 | Prisma call outside `src/data/` (data.md RC9) | Minor | Declined: spec S-00 places the audit writer in `src/lib/` as shared infra that runs inside the caller's transaction, like `db.ts` |
+| 3 | evidence notes 1 and 3 | Stale after the lead re-run | Minor | Lead fixed |
+| 4 | evidence | No `pnpm ls` version line (versions.md RC4) | Minor | Accepted T-01 evidence line 46: package.json unchanged |
+
+Spec question closed: a cancelled visit holds no check-in time. S-08 cancels only expected visits, so the CHECK matches.
+Lead question to specialist: `.env.example` differs from HEAD but is not in T-02 owns. Specialist to report the change.
+PR items: EXPLAIN ANALYZE for the four non-FK raw-SQL indexes (data.md RC3) on empty S-00 tables, to be handled at the S-00 PR.
+
+## E-001/S-00/T-02 round 2
+Verdict: Approve (reviewer subagent, read only). Item 1 closed (server-only first import). Items 3 and 4 closed.
+
+Lead actions on the reviewer's open items:
+| # | Issue | Lead action |
+|---|---|---|
+| 1 | RC9 skipped without ADR | Wrote docs/adr/0016-override-audit-writer-in-lib.md, listed on the card |
+| 2 | Stale .env.example note | Note 2 rewritten: unchanged, sandbox artifact |
+| 3 | tsc and lint not shown after the fix | Lead re-ran both after the fix, exit 0, blocks added to evidence |
+
+Open review items carried to the PR: ADR-0016 Who to be named by the engineer. EXPLAIN ANALYZE for the four non-FK raw-SQL indexes (data.md RC3).
