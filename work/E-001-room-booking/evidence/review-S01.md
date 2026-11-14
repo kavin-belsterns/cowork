@@ -217,3 +217,73 @@ Approve and commit. Issue 1 and both suggestions carried to "Open review items".
 | T-05 | 1 | tests/e2e/E-001/S01-sign-in.spec.ts | AC-49 depends on a seed less than 7 days old. Move the expiry forward inside the existing snapshot and restore. | Minor |
 | T-05 | S1 | tests/e2e/E-001/S01-sign-in.spec.ts | Hydration check uses React's internal `__reactProps` key. | Minor |
 | T-05 | S2 | src/instrumentation.ts (S-00) | "Ecmascript file had an error" in build output. Build passes. Cause unverified. | Minor |
+
+## E-001/S-01/T-06 round 1
+
+Reviewer: bls-engineering:reviewer. Verdict: **Request Changes**.
+
+| # | Check | Result |
+|---|---|---|
+| 1 | Evidence | pass. 4 commands, all `exit: 0`. Evidence (re-run by the lead) is newer than every doc file. |
+| 2 | Owned files | pass. Three new doc files under `docs/**`, none under `docs/adr/**`. |
+| 3 | Contract diff | pass against origin/main 4a94c17. |
+| 4 | EARS coverage | n/a until T-05 |
+| 5 | Standards | pass. writing.md checks clean. |
+| 6 | Overrides | pass. None. |
+
+### Issues
+| # | File | Line | Issue | Severity |
+|---|---|---|---|---|
+| 1 | docs/manual/E-001-room-booking.md | 25 | Lockout copy says "Try again in 15 minutes." The app shows "Too many attempts. Try again in 15 minutes." | Major |
+| 2 | docs/workflows/E-001-room-booking.md | 14 | Same copy mismatch in node D. | Major |
+| 3 | docs/manual/E-001-room-booking.md | 25 | Names only the 5-failure account limit. The IP block shows the same message, and the workflow leaves out the IP check, which runs first. | Minor |
+| 4 | docs/manual/E-001-room-booking.md | 8 | Says sign-in opens the role home. A checked return path comes first when present. | Minor |
+
+### Suggestions
+| # | File | Line | Suggestion | Category |
+|---|---|---|---|---|
+| 1 | docs/workflows/E-001-room-booking.md | 17 | "password not expired": only the temporary password expires. | Docs |
+| 2 | docs/manual/E-001-room-booking.md | 22 | Headers "What you see" and "What to do" use second person (writing.md W10). | Style |
+| 3 | evidence E001-S01-T06.txt | 17-18 | `git diff --stat docs/` prints nothing for untracked files. | Docs |
+| 4 | docs/rules/auth.md | 6 | `RETRY_AFTER_SECONDS` has no `@ears` tag (fix in src/domain/auth/rules.ts, T-03 owns). | Docs |
+
+### Lead decisions
+- Issues 1 to 4 and suggestion 1: fix in round 2.
+- Suggestion 3: the card's done command changes to `git status --short docs/`.
+- Suggestions 2 and 4: carried to "Open review items".
+
+## E-001/S-01/T-06 round 2
+
+Reviewer: bls-engineering:reviewer. Verdict: **Approve**.
+
+| # | Check | Result |
+|---|---|---|
+| 1 | Evidence | pass. 4 commands, all `exit: 0`. Evidence is newer than every doc file. |
+| 2 | Owned files | pass. Manual, workflow, rules doc and evidence match `owns`. openapi.yaml and erd.md regenerated with no diff. |
+| 3 | Contract diff | pass against origin/main 4a94c17. |
+| 4 | EARS coverage | n/a until T-05 |
+| 5 | Standards | pass, with Minor issue 1. |
+| 6 | Overrides | pass. None. |
+
+Round 1 issues 1 to 4 and suggestions 1 and 3 are fixed. Suggestions 2 and 4 stay carried.
+
+### Issues
+| # | File | Line | Issue | Severity |
+|---|---|---|---|---|
+| 1 | docs/workflows/E-001-room-booking.md | 25 | Edge `I -->\|No\| L` goes to "Open the role home". The code opens the checked return path first when present. The manual is right; the workflow is not, for this one branch. | Minor |
+
+### Suggestions
+| # | File | Line | Suggestion | Category |
+|---|---|---|---|---|
+| 1 | evidence E001-S01-T06.txt | 30-33 | "Files changed" leaves out `docs/rules/auth.md`, which `pnpm docs:all` wrote. | Docs |
+
+### Lead action
+Approve and commit. Round limit reached. Issue 1 and suggestion 1 carried to "Open review items".
+
+## Open review items (added at T-06)
+| Task | # | File | Issue | Severity |
+|---|---|---|---|---|
+| T-06 | R1-S2 | docs/manual/E-001-room-booking.md | Table headers "What you see" and "What to do" use second person (writing.md W10). | Minor |
+| T-06 | R1-S4 | src/domain/auth/rules.ts | `RETRY_AFTER_SECONDS` has no `@ears` tag, so docs/rules/auth.md shows "-". | Minor |
+| T-06 | R2-1 | docs/workflows/E-001-room-booking.md | No-forced-change branch goes to the role home; the code opens the checked return path first when present. | Minor |
+| T-06 | R2-S1 | evidence E001-S01-T06.txt | "Files changed" omits docs/rules/auth.md. | Minor |

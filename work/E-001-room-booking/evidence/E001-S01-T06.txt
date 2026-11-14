@@ -1,0 +1,40 @@
+$ pnpm docs:all
+exit: 0
+$ pnpm docs:openapi && pnpm docs:rules && pnpm docs:erd
+$ tsx scripts/gen-openapi.ts
+Wrote docs/api/openapi.yaml
+$ node scripts/gen-rules-doc.ts
+WARN src/domain/auth/rules.ts: RETRY_AFTER_SECONDS has no @ears tag
+Wrote 1 rules doc(s) to docs/rules/. Warnings: 1.
+$ prisma generate --generator markdown
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+
+✔ Generated prisma-markdown (4.0.0) to ./docs/db/erd.md in 8ms
+
+$ git status --short docs/
+exit: 0
+?? docs/manual/
+?? docs/rules/
+?? docs/workflows/
+
+$ git diff --exit-code docs/api/openapi.yaml
+exit: 0
+
+
+$ bash scripts/ci/check-dashes.sh
+exit: 0
+PASS check-dashes: no em or en dashes in docs/ and work/
+
+## Files changed
+docs/manual/E-001-room-booking.md
+docs/workflows/E-001-room-booking.md
+work/E-001-room-booking/evidence/E001-S01-T06.txt
+
+## Owns check
+$ owns-check.sh work/E-001-room-booking/tasks/E001-S01-T06.md <3 paths from git status>
+ALLOW docs/manual/E-001-room-booking.md
+ALLOW docs/rules/auth.md
+ALLOW docs/workflows/E-001-room-booking.md
+owns-check exit: 0
