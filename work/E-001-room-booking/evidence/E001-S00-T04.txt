@@ -1,0 +1,22 @@
+$ pnpm tsc --noEmit
+exit: 0
+
+$ pnpm lint
+exit: 0
+$ eslint .
+
+$ bash scripts/ci/check-no-console.sh
+exit: 0
+PASS check-no-console: no console calls outside logger
+
+$ bash scripts/ci/check-test-tree.sh
+exit: 0
+PASS check-test-tree: no test files under src/
+
+## Files changed
+components.json
+src/app/globals.css
+src/app/layout.tsx
+src/app/global-error.tsx
+src/app/not-found.tsx
+src/components/ui/button.tsx
