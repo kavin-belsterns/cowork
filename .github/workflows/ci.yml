@@ -85,11 +85,25 @@ jobs:
           pnpm exec prisma db seed
       - name: Vitest unit and integration
         run: pnpm exec vitest run
-      - run: pnpm exec playwright install --with-deps chromium
+      # Playwright starts the app through webServer and waits for a non-error answer on "/".
+      # Before any page exists (S-00) "/" is 404, so a run with no specs would time out.
+      # Each step runs only when its spec files exist; the first story that adds specs turns it on.
+      - name: Find Playwright specs
+        id: specs
+        run: |
+          ui=$(find tests/ui -name '*.spec.ts' 2>/dev/null | wc -l | tr -d ' ')
+          e2e=$(find tests/e2e -name '*.spec.ts' 2>/dev/null | wc -l | tr -d ' ')
+          echo "ui=$ui" >> "$GITHUB_OUTPUT"
+          echo "e2e=$e2e" >> "$GITHUB_OUTPUT"
+          echo "ui specs: $ui, e2e specs: $e2e"
+      - if: steps.specs.outputs.ui != '0' || steps.specs.outputs.e2e != '0'
+        run: pnpm exec playwright install --with-deps chromium
       - name: Playwright ui (375, 768, 1280)
-        run: pnpm exec playwright test --project=ui-375 --project=ui-768 --project=ui-1280 --pass-with-no-tests
+        if: steps.specs.outputs.ui != '0'
+        run: pnpm exec playwright test --project=ui-375 --project=ui-768 --project=ui-1280
       - name: Playwright e2e
-        run: pnpm exec playwright test --project=e2e --pass-with-no-tests
+        if: steps.specs.outputs.e2e != '0'
+        run: pnpm exec playwright test --project=e2e
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4

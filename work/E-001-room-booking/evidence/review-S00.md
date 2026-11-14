@@ -176,3 +176,7 @@ Verdict: Request Changes (reviewer subagent, read only, HEAD 24f4c51). All 8 rou
 | 3 | csp-nonce meta tag in layout.tsx:27 | Minor | Open review item |
 | 4 | Client-only errors in global-error.tsx not reported | Minor | Open review item, decide when a client log sink exists |
 Round 2 is the last round. No round 3.
+
+## E-001/S-00 CI fix (Auto-fix, lead, 2026-11-14)
+CI on 59deb50 failed at "Playwright ui": webServer timed out after 180 s. Cause: S-00 has no page, so "/" answers 404 and Playwright never sees the server as ready, even with no specs to run. Typecheck on a clean checkout and Vitest against CI Postgres both passed on this run.
+Fix in `.github/workflows/ci.yml` (T-01 owns it): a step counts ui and e2e spec files; each Playwright step and the browser install run only when specs exist. The first story with specs turns them on.
