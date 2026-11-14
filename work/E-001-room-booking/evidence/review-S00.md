@@ -165,3 +165,14 @@ Open item: `pnpm build` prints 2 Edge runtime warnings (`process.stdout` in `src
 
 ## E-001/S-00/T-05 follow-up round (lead, 2026-11-14)
 Story items 6 and 7 closed by the test-engineer: six live catalog tests (constraint, CHECKs, triggers, indexes, roles NOLOGIN, grants per spec with no TRUNCATE), and no DATABASE_URL_MIGRATOR fallback in vitest.config.ts. 15 of 15 pass on the test DB. With the variable unset the run exits 1. CI sets the variable at job level.
+
+## E-001/S-00 story pass round 2
+Verdict: Request Changes (reviewer subagent, read only, HEAD 24f4c51). All 8 round 1 items closed.
+
+| # | Issue | Severity | Lead action |
+|---|---|---|---|
+| 1 | next-env.d.ts imports .next/types; claimed to fail clean typecheck | Critical (claimed) | Declined with proof: `pnpm tsc --noEmit` with `.next/` and `tsconfig.tsbuildinfo` removed exits 0. CI on 24f4c51 is the final check |
+| 2 | Edge warnings from process.stdout via instrumentation.ts | Minor | Open review item |
+| 3 | csp-nonce meta tag in layout.tsx:27 | Minor | Open review item |
+| 4 | Client-only errors in global-error.tsx not reported | Minor | Open review item, decide when a client log sink exists |
+Round 2 is the last round. No round 3.
