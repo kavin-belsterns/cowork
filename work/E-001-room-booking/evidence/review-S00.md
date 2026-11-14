@@ -95,3 +95,29 @@ Suggestions:
 |---|------|------|------------|----------|
 | 1 | components.json | 16 | The alias `@/lib/utils` is configured, but `src/lib/utils.ts` does not yet exist. When adding future shadcn primitives that depend on `cn`, provide the standard helper. | Style |
 | 2 | src/components/ui/button.tsx | 32 | Icon buttons (`size="icon"`) must receive an explicit `aria-label` attribute from call sites per WCAG 2.2 and standards/ui.md. | Testing |
+
+
+## E-001/S-00/T-05 round 1
+Verdict: Request Changes (reviewer subagent, read only). Comprehensive foundation test suite implemented across unit, integration, and UI fixture layers with high quality assertions.
+
+| # | File | Line | Issue | Severity | Lead action |
+|---|------|------|-------|----------|-------------|
+| 1 | next-env.d.ts | 3 | File modified outside card owns list (Next.js route type imports; revert via git checkout) | Critical | Revert with git checkout |
+| 2 | tests/ui/fixtures.ts | 1 | ESLint suppression "/* eslint-disable react-hooks/rules-of-hooks */" has no ADR reference and lacks an override ADR in docs/adr/ | Critical | Re-dispatch / fix: rename fixture callback parameter to eliminate hook false-positive without disable comment |
+
+
+## E-001/S-00/T-05 round 2
+Verdict: Approve (reviewer subagent, read only). Round 1 issues 1 and 2 closed.
+
+Checks in order:
+| # | Check | Result |
+|---|---|---|
+| 1 | Evidence present for every done command | pass |
+| 2 | Only owned files changed | pass |
+| 3 | No contract diff outside S-00 | pass |
+| 4 | EARS coverage (check-ac-coverage.sh) | pass |
+| 5 | Standards checklist lines | pass |
+| 6 | Overrides have ADRs | pass |
+
+Critical Issues: None.
+Suggestions: None.

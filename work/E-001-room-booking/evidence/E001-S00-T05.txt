@@ -1,0 +1,56 @@
+$ pnpm tsc --noEmit
+exit: 0
+
+$ pnpm lint
+exit: 0
+$ eslint .
+
+$ pnpm vitest run tests/unit/lib
+exit: 0
+ RUN  v4.1.12 /Users/kavinpasupathy/Documents/cowork
+
+ ✓ tests/unit/lib/errors.test.ts (21 tests) 13ms
+ ✓ tests/unit/lib/http.test.ts (10 tests) 33ms
+ ✓ tests/unit/lib/env.test.ts (13 tests) 5ms
+ ✓ tests/unit/lib/logger.test.ts (11 tests) 5ms
+ ✓ tests/unit/lib/db.test.ts (11 tests) 3ms
+ ✓ tests/unit/lib/time.test.ts (18 tests) 26ms
+
+ Test Files  6 passed (6)
+      Tests  84 passed (84)
+   Start at  16:41:27
+   Duration  607ms (transform 129ms, setup 0ms, import 716ms, tests 83ms, environment 0ms)
+
+$ pnpm vitest run tests/integration/house
+exit: 0
+ RUN  v4.1.12 /Users/kavinpasupathy/Documents/cowork
+
+ ✓ tests/integration/house/authz-matrix.test.ts (14 tests) 8ms
+ ✓ tests/integration/house/routes.test.ts (7 tests) 14ms
+ ✓ tests/integration/house/headers.test.ts (5 tests) 4ms
+
+ Test Files  3 passed (3)
+      Tests  26 passed (26)
+   Start at  16:41:28
+   Duration  166ms (transform 47ms, setup 0ms, import 159ms, tests 26ms, environment 0ms)
+
+$ bash scripts/ci/check-no-console.sh
+exit: 0
+PASS check-no-console: no console calls outside logger
+
+$ bash scripts/ci/check-test-tree.sh
+exit: 0
+PASS check-test-tree: no test files under src/
+
+## Files changed
+tests/integration/contracts/migration.test.ts
+tests/integration/house/authz-matrix.test.ts
+tests/integration/house/headers.test.ts
+tests/integration/house/routes.test.ts
+tests/ui/fixtures.ts
+tests/unit/lib/db.test.ts
+tests/unit/lib/env.test.ts
+tests/unit/lib/errors.test.ts
+tests/unit/lib/http.test.ts
+tests/unit/lib/logger.test.ts
+tests/unit/lib/time.test.ts
