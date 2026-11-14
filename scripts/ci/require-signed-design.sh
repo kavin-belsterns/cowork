@@ -7,12 +7,12 @@ if [ -z "$dir" ]; then echo "FAIL require-signed-design: usage: scripts/ci/requi
 d="$dir/design.md"
 if [ ! -f "$d" ]; then echo "FAIL require-signed-design: $d not found"; exit 1; fi
 
-fm=$(tr -d '\r' < "$d" | awk 'NR == 1 { if ($0 != "---") exit; next } $0 == "---" { exit } { print }')
+fm=$(awk 'NR == 1 { if ($0 != "---") exit; next } $0 == "---" { exit } { print }' "$d" | tr -d '\r')
 if [ -z "$fm" ]; then echo "FAIL require-signed-design: $d has no front matter"; exit 1; fi
 
 get() {
   printf '%s\n' "$fm" | sed -n "s/^$1:[[:space:]]*//p" | head -n1 \
-    | sed -e "s/^[\"']//" -e "s/[\"']\$//" -e 's/[[:space:]]*$//'
+    | sed -e 's/[[:space:]]*#.*$//' -e "s/^[\"']//" -e "s/[\"']\$//" -e 's/[[:space:]]*$//'
 }
 status=$(get status)
 by=$(get signed_by)
