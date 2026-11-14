@@ -151,3 +151,33 @@ Base note: origin/main moved to 4a94c17 (Dependabot #101, #102: `@playwright/tes
 - 3: fix in round 2 with the `Button` variants.
 - Suggestions 1 and 2: fix in round 2 (small and in owns). Suggestion 3: carried to "Open review items" with T-03 R1-4.
 - Rebase onto origin/main 4a94c17 before round 2.
+
+## E-001/S-01/T-04 round 2
+
+Reviewer: bls-engineering:reviewer. Verdict: **Approve**.
+
+| # | Check | Result |
+|---|---|---|
+| 1 | Evidence | pass. 7 commands, all `exit: 0`. 165 UI tests. Timestamps show a fresh run after the last edit. |
+| 2 | Owned files | pass. 29 paths match the widened `owns`, plus the evidence file. Under `src/components/ui` only `input.tsx` and `label.tsx` are new. `package.json` and the lockfile are unchanged. |
+| 3 | Contract diff | pass against origin/main 4a94c17. |
+| 4 | EARS coverage | n/a until T-05 |
+| 5 | Standards | pass. ui.md RC1, RC2, RC3. |
+| 6 | Overrides | pass. None. |
+
+Round 1 items: R1-1 fixed (confirmed against Next 16.4.6: the note stays only on the role-home redirect; sign-out and sign-in mount also clear it). R1-2, R1-3, S1, S2 fixed. S3 carried.
+
+### Suggestions
+| # | File | Line | Suggestion | Category |
+|---|---|---|---|---|
+| 1 | tests/ui/account-password.spec.ts | 242-254 | The sign-in mount also clears the note, so this test would pass even if the form's catch path stopped clearing it. Optional: check `sessionStorage` before the sign-in page mounts. | Testing |
+
+### Lead action
+Approve and commit. Suggestion 1 carried.
+
+## Open review items (added at T-04)
+| Task | # | File | Issue | Severity |
+|---|---|---|---|---|
+| T-04 | R1-2 | src/components/ui/input.tsx, label.tsx | New shared shadcn components added by S-01, outside the story owns, so ui.md RC3 holds. No S-00 file edited, no dependency added. | Minor |
+| T-04 | R1-S3 | src/components/auth/password-form.tsx | "Use 12 to 128 characters." is not a spec section 2 copy key (with T-03 R1-4). | Minor |
+| T-04 | R2-S1 | tests/ui/account-password.spec.ts | Expired-session test does not prove the form's own clear path on its own. | Minor |
