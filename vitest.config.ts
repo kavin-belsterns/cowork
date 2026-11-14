@@ -21,7 +21,6 @@ export default defineConfig({
       NODE_ENV: 'test',
       DATABASE_URL_WEB: process.env.DATABASE_URL_WEB ?? 'postgresql://app_web:app_web@localhost:5433/app_test',
       DATABASE_URL_WORKER: process.env.DATABASE_URL_WORKER ?? 'postgresql://app_worker:app_worker@localhost:5433/app_test',
-      DATABASE_URL_MIGRATOR: process.env.DATABASE_URL_MIGRATOR ?? 'postgresql://app_owner:app_owner@localhost:5433/app_test',
       APP_ORIGIN: 'http://localhost:3000',
       LOG_LEVEL: 'error',
     },

@@ -162,3 +162,6 @@ Suggestion 2 (nonce needs dynamic rendering) taken into T-04. Suggestions 3, 4, 
 ## E-001/S-00/T-04 story fix round (lead, 2026-11-14)
 ui-engineer closed story items 1, 2, 3, 8 and suggestion 2. All 6 done commands exit 0 including `pnpm build`; built CSS contains the token utilities (`--primary`, `.bg-primary`). Story review round 2 re-checks these.
 Open item: `pnpm build` prints 2 Edge runtime warnings (`process.stdout` in `src/lib/logger.ts`, reached from `src/instrumentation.ts`). Build passes. Fix needs a `NEXT_RUNTIME` guard in `src/lib/env.ts` or `src/lib/logger.ts` (T-01 files). Carried to the T-05 follow-up card.
+
+## E-001/S-00/T-05 follow-up round (lead, 2026-11-14)
+Story items 6 and 7 closed by the test-engineer: six live catalog tests (constraint, CHECKs, triggers, indexes, roles NOLOGIN, grants per spec with no TRUNCATE), and no DATABASE_URL_MIGRATOR fallback in vitest.config.ts. 15 of 15 pass on the test DB. With the variable unset the run exits 1. CI sets the variable at job level.
