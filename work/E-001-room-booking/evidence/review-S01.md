@@ -115,3 +115,39 @@ Approve and commit. Suggestion 1 and the ADR-0017 status are carried to "Open re
 | T-03 | R1-S2 | src/lib/auth/client-ip.ts | No `X-Forwarded-For` puts everyone in the `unknown` bucket. Add to the release checklist. | Minor |
 | T-03 | R1-S3 | src/lib/auth/sign-in.ts | Role read from the new session row: one extra lookup. Add `role` to `CredentialUser`. | Minor |
 | T-03 | R2-S1 | src/lib/auth/change-password.ts | `clearFailures` runs after commit; a throw there returns 500 although the change succeeded. | Minor |
+
+## E-001/S-01/T-04 round 1
+
+Reviewer: bls-engineering:reviewer. Verdict: **Request Changes**.
+
+| # | Check | Result |
+|---|---|---|
+| 1 | Evidence | pass. 7 commands, all `exit: 0`. 162 UI tests at three widths, axe clean. |
+| 2 | Owned files | pass. 26 untracked paths match card `owns`. No `route.ts` or `actions.ts` touched. |
+| 3 | Contract diff | pass against origin/main. |
+| 4 | EARS coverage | n/a until T-05 |
+| 5 | Standards | fail: issues 1 and 2. |
+| 6 | Overrides | pass. None. No suppressions. |
+
+Base note: origin/main moved to 4a94c17 (Dependabot #101, #102: `@playwright/test` 1.65.0, `lucide-react` 1.70.0, Radix). Rebase and re-run the build and UI commands.
+
+### Issues
+| # | File | Line | Issue | Severity |
+|---|---|---|---|---|
+| 1 | src/components/auth/password-form.tsx | 19, 23, 27 | The "Password changed." note is set before the action runs and kept on every redirect, including the redirect to `/sign-in` for an expired session or a deactivated account. Sign-out does not clear it. The next page can show "Password changed." when nothing changed, possibly to another user. No test covers this path. | Major |
+| 2 | src/components/auth/text-field.tsx | 22, 30-41 | ui.md RC3: the input and label are hand-rolled. shadcn Input and Label do not exist in `src/components/ui`. | Major |
+| 3 | src/components/shell/role-menu.tsx, sign-out-button.tsx | 33-43; 11-19 | ui.md RC3: the Menu toggle and Sign out are hand-rolled buttons, although `Button` has `outline` and `ghost` variants. | Minor |
+
+### Suggestions
+| # | File | Line | Suggestion | Category |
+|---|---|---|---|---|
+| 1 | src/components/auth/password-form.tsx | 12-14 | `isRedirect` matches Next's internal `NEXT_REDIRECT` digest. Put redirect parsing in one helper. | Maintainability |
+| 2 | tests/ui/*.spec.ts | 311; 351 | `page.waitForTimeout(1000)` in both loading tests can flake. Wait on the prefetch response. | Reliability |
+| 3 | src/components/auth/password-form.tsx | 49 | "Use 12 to 128 characters." is not a spec copy key. Add it to the spec key list (T-03 R1-4). | Docs |
+
+### Lead decisions
+- 1: fix in round 2. Keep the note only when the redirect target is the role home. Clear it at sign-out. Add a test for the unauthenticated path.
+- 2: fix in round 2. The card widens to two new files, `src/components/ui/input.tsx` and `src/components/ui/label.tsx`, written as the standard shadcn components (Label on the existing `@radix-ui/react-label`). No S-00 file is edited and no dependency is added. These paths are outside the story owns: carried to "Open review items" for the human to see.
+- 3: fix in round 2 with the `Button` variants.
+- Suggestions 1 and 2: fix in round 2 (small and in owns). Suggestion 3: carried to "Open review items" with T-03 R1-4.
+- Rebase onto origin/main 4a94c17 before round 2.
