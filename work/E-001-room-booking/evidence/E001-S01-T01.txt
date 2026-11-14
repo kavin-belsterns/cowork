@@ -1,0 +1,1 @@
+None: S-01 reads the S-00 contracts (src/contracts/auth.ts, src/contracts/permissions.ts) and changes none of them.
