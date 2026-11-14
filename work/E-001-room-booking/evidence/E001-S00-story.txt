@@ -1,50 +1,119 @@
 # Story Evidence: E-001/S-00 Contracts
 
+Re-run by the lead on 2026-11-14 after the T-05 fix, test DB e001-testdb up. Reset run under the user's consent for e001_test.
+
+```
 $ pnpm install --frozen-lockfile
 exit: 0
+✓ Lockfile passes supply-chain policies (verified 2h ago)
 Lockfile is up to date, resolution step is skipped
-Done in 1.6s using pnpm v12.18.0
+Done in 40ms using pnpm v12.18.0
+```
 
+```
 $ pnpm tsc --noEmit
 exit: 0
 
+```
+
+```
 $ pnpm lint
 exit: 0
 $ eslint .
+```
 
+```
 $ pnpm prisma validate
 exit: 0
 Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
 The schema at prisma/schema.prisma is valid 🚀
+```
 
-$ DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm prisma migrate reset --force && pnpm prisma db seed
+```
+$ DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm prisma migrate reset --force
 exit: 0
-Applying migration `20261114093324_e001_init`
-seed ok: 2 offices, 8 rooms, 10 users, 8 bookings, 16 visits
-🌱  The seed command has been executed.
+Loaded Prisma config from prisma.config.ts.
 
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "e001_test", schema "public" at "127.0.0.1:5434"
+
+Applying migration `20261114093324_e001_init`
+
+Database reset successful
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20261114093324_e001_init/
+    └─ migration.sql
+```
+
+```
+$ DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm prisma db seed
+exit: 0
+Loaded Prisma config from prisma.config.ts.
+
+Running seed command `tsx prisma/seed.ts` ...
+seed ok: 2 offices, 8 rooms, 10 users, 8 bookings, 16 visits
+
+🌱  The seed command has been executed.
+```
+
+```
 $ bash scripts/ci/check-fk-index.sh
 exit: 0
 PASS check-fk-index: every foreign key has an index
+```
 
+```
 $ bash scripts/ci/check-versions.sh
 exit: 0
 PASS check-versions: all dependencies pinned exact, pnpm-lock.yaml present
+```
 
-$ pnpm vitest run tests/unit/contracts tests/unit/lib tests/integration/contracts tests/integration/house
+```
+$ DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm vitest run tests/unit/contracts tests/unit/lib tests/integration/contracts tests/integration/house
 exit: 0
- Test Files  23 passed (23)
-      Tests  925 passed (925)
-   Start at  17:00:17
-   Duration  1.05s
 
+ RUN  v4.1.12 /Users/kavinpasupathy/Documents/cowork
+
+
+ Test Files  23 passed (23)
+      Tests  924 passed (924)
+   Start at  17:34:43
+   Duration  837ms (transform 406ms, setup 0ms, import 2.22s, tests 404ms, environment 1ms)
+```
+
+```
 $ pnpm docs:openapi && git diff --exit-code docs/api/openapi.yaml
 exit: 0
+$ tsx scripts/gen-openapi.ts
 Wrote docs/api/openapi.yaml
+```
 
-$ docker compose config
+```
+$ bash scripts/ci/check-test-tree.sh
 exit: 0
-name: room-booking
-services:
-  db: ...
-  web: ...
+PASS check-test-tree: no test files under src/
+```
+
+```
+$ bash scripts/ci/check-no-console.sh
+exit: 0
+PASS check-no-console: no console calls outside logger
+```
+
+```
+$ bash scripts/ci/check-dashes.sh
+exit: 0
+PASS check-dashes: no em or en dashes in docs/ and work/
+```
+
+```
+$ POSTGRES_USER=x POSTGRES_PASSWORD=x POSTGRES_DB=x DATABASE_URL_WEB=postgresql://x@db/x APP_ORIGIN=https://x.example docker compose config -q
+exit: 0
+
+```
+
