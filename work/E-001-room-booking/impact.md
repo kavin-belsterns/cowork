@@ -49,3 +49,20 @@ Additions beyond the SOW, for client confirmation: platform admin role and offic
 Open point: monthly uptime target. Owner: client IT team.
 
 Approval: Kavin Pasupathy, 2026-11-14. Comment posted on each item: yes.
+
+## Impact table: 2026-11-15 web role delete grants
+Found by the E-001/S-02 lead before T-01: `app_web` has no DELETE on `office_hours` or `booking_series`, but signed specs S-02 and S-07 delete rows there.
+
+| Input item | Touched EARS IDs | Touched stories | Functional effect | NFR effect |
+|---|---|---|---|---|
+| `app_web` may delete `office_hours` rows | E-001/AC-54 | E-001/S-02 | An admin can close a weekday that was open (no row means closed) | None |
+| `app_web` may delete `booking_series` rows | E-001/AC-74, E-001/AC-75, E-001/AC-76, E-001/AC-77 | E-001/S-07 | A series that books 0 dates leaves no series row | None |
+
+## Change table: 2026-11-15 web role delete grants
+| Item ID | Current status | Action | Reason | EARS IDs | Downstream stories |
+|---|---|---|---|---|---|
+| E-001/S-14 (#104) | (new) | Create | Contracts amendment: new migration grants DELETE on `office_hours` and `booking_series` to `app_web`; S-00 grants test updated. Only S-00 or an amendment touches `prisma/` (recommended) | E-001/AC-54, E-001/AC-74 to E-001/AC-77 | E-001/S-02, E-001/S-07 |
+| E-001/S-07 (#9) | Backlog | Edit | Add blocked by S-14 | E-001/AC-74 to E-001/AC-77 | None |
+| E-001/S-02 (#4) | In progress | None | Edit not allowed while In progress. S-02 stacks on S-14 under an eng-build override ADR | E-001/AC-54 | None |
+
+Approval: Kavin P, 2026-11-15. Comment posted on each item: yes.

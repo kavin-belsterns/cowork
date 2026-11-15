@@ -154,6 +154,7 @@ Today this runs on email, paper and memory, which caused double bookings, lost v
 | E-001/S-11 | #13 | Weekly reports |
 | E-001/S-12 | #14 | Visitor data purge |
 | E-001/S-13 | #15 | Quality checks |
+| E-001/S-14 | #104 | Contracts amendment: web role delete grants |
 
 ## Status note
 Change table approved on 2026-11-14. Next: eng-design. Status lives on the Room booking board.
