@@ -18,7 +18,7 @@ owns:
   - tests/integration/purge/**
   - tests/integration/worker/**
   - tests/e2e/E-001/S12-visitor-purge.spec.ts
-depends_on: [E-001/S-00, E-001/S-09]
+depends_on: [E-001/S-00, E-001/S-01]
 parallel: true
 ---
 

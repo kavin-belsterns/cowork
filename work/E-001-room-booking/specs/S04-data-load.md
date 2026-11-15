@@ -14,7 +14,7 @@ owns:
   - tests/integration/import/**
   - tests/ui/admin-import.spec.ts
   - tests/e2e/E-001/S04-data-load.spec.ts
-depends_on: [E-001/S-00, E-001/S-03]
+depends_on: [E-001/S-00, E-001/S-01]
 parallel: true
 ---
 

@@ -13,7 +13,7 @@ owns:
   - tests/ui/bookings.spec.ts
   - tests/ui/bookings-new.spec.ts
   - tests/e2e/E-001/S06-book-room.spec.ts
-depends_on: [E-001/S-00, E-001/S-03, E-001/S-05]
+depends_on: [E-001/S-00, E-001/S-05]
 parallel: true
 ---
 

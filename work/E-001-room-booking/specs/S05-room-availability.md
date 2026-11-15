@@ -12,7 +12,7 @@ owns:
   - tests/integration/availability/**
   - tests/ui/rooms.spec.ts
   - tests/e2e/E-001/S05-room-availability.spec.ts
-depends_on: [E-001/S-00, E-001/S-02]
+depends_on: [E-001/S-00, E-001/S-01]
 parallel: true
 ---
 
