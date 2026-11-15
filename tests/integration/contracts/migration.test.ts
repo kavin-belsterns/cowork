@@ -209,6 +209,8 @@ describe('Database Migration & Raw-SQL Schema Verification', () => {
           ...Object.fromEntries(webTables.map((t) => [t, [...crud]])),
           audit_events: ['INSERT', 'SELECT'],
           job_runs: ['SELECT'],
+          office_hours: ['DELETE', ...crud],
+          booking_series: ['DELETE', ...crud],
           sessions: ['DELETE', ...crud],
           sign_in_attempts: ['DELETE', ...crud],
           idempotency_keys: ['DELETE', ...crud],

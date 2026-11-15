@@ -1,0 +1,78 @@
+$ pnpm tsc --noEmit
+exit: 0
+
+
+$ pnpm lint
+exit: 0
+$ eslint .
+
+$ pnpm prisma validate
+exit: 0
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+The schema at prisma/schema.prisma is valid 🚀
+
+$ git diff --exit-code origin/main -- prisma/schema.prisma src/contracts
+exit: 0
+
+
+$ DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm prisma migrate deploy
+exit: 0
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "e001_s02", schema "public" at "127.0.0.1:5434"
+
+2 migrations found in prisma/migrations
+
+Applying migration `20261115090000_web_delete_grants`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20261115090000_web_delete_grants/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+
+$ DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm prisma migrate status
+exit: 0
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "e001_s02", schema "public" at "127.0.0.1:5434"
+
+2 migrations found in prisma/migrations
+
+Database schema is up to date!
+
+$ DATABASE_URL_WEB=$TEST_DATABASE_URL_WEB DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm vitest run tests/integration/contracts
+exit: 0
+
+ RUN  v4.1.12 /Users/kavinpasupathy/Documents/cowork/.claude/worktrees/e001-s01-sign-in-4e4d85
+
+
+ Test Files  1 passed (1)
+      Tests  15 passed (15)
+   Start at  09:04:02
+   Duration  148ms (transform 11ms, setup 0ms, import 28ms, tests 37ms, environment 0ms)
+
+$ bash scripts/ci/check-fk-index.sh
+exit: 0
+PASS check-fk-index: every foreign key has an index
+
+$ bash scripts/ci/check-test-tree.sh
+exit: 0
+PASS check-test-tree: no test files under src/
+
+## Files changed
+prisma/migrations/20261115090000_web_delete_grants/migration.sql
+tests/integration/contracts/migration.test.ts
+work/E-001-room-booking/evidence/E001-S14-T01.txt
+
+## Owns check
+$ owns-check.sh work/E-001-room-booking/tasks/E001-S14-T01.md <2 paths>
+ALLOW prisma/migrations/20261115090000_web_delete_grants/migration.sql
+ALLOW tests/integration/contracts/migration.test.ts
+owns-check exit: 0

@@ -1,0 +1,54 @@
+$ pnpm tsc --noEmit
+exit: 0
+
+$ pnpm lint
+exit: 0
+$ eslint .
+
+$ DATABASE_URL_WEB=$TEST_DATABASE_URL_WEB DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm vitest run tests/integration/contracts
+exit: 0
+
+ RUN  v4.1.12 /Users/kavinpasupathy/Documents/cowork/.claude/worktrees/e001-s01-sign-in-4e4d85
+
+
+ Test Files  2 passed (2)
+      Tests  21 passed (21)
+   Start at  09:07:48
+   Duration  159ms (transform 21ms, setup 0ms, import 46ms, tests 64ms, environment 0ms)
+
+
+$ bash scripts/ci/check-test-tree.sh
+exit: 0
+PASS check-test-tree: no test files under src/
+
+## Notes
+Extra run, not a done command: unreachable DB (port 1) fails, does not skip.
+
+$ DATABASE_URL_WEB=postgresql://x:y@127.0.0.1:1/z DATABASE_URL_MIGRATOR=postgresql://x:y@127.0.0.1:1/z pnpm vitest run tests/integration/contracts/web-delete-grants.test.ts
+exit: 1
+
+ RUN  v4.1.12 /Users/kavinpasupathy/Documents/cowork/.claude/worktrees/e001-s01-sign-in-4e4d85
+
+ ❯ tests/integration/contracts/web-delete-grants.test.ts (6 tests | 6 skipped) 3ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/integration/contracts/web-delete-grants.test.ts > S-14 app_web delete grants
+Error: connect ECONNREFUSED 127.0.0.1:1
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 skipped (6)
+   Start at  09:07:48
+   Duration  99ms (transform 8ms, setup 0ms, import 19ms, tests 3ms, environment 0ms)
+
+
+## Files changed
+tests/integration/contracts/web-delete-grants.test.ts
+work/E-001-room-booking/evidence/E001-S14-T05.txt
+
+## Owns check
+$ owns-check.sh work/E-001-room-booking/tasks/E001-S14-T05.md tests/integration/contracts/web-delete-grants.test.ts
+ALLOW tests/integration/contracts/web-delete-grants.test.ts
+owns-check exit: 0

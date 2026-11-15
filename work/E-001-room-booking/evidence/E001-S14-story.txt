@@ -1,0 +1,177 @@
+# E-001/S-14 story checks (spec section 8 plus CI-mirror checks)
+
+Run on 2026-11-15 against the dedicated test database e001_s14 (fresh: both migrations applied in order, then seeded). The web connection logs in as app_web_login, which inherits the NOLOGIN app_web role, as in CI.
+Commits after the run change only the T-06 evidence and the review log. No file under src/, tests/, prisma/ or package.json changed after it.
+
+Totals: grant and contract tests 21 passed; full Vitest 40 files, 1087 tests passed; Playwright (ui and e2e) 172 passed.
+
+$ git log --oneline -1 && git rev-parse --short origin/main
+exit: 0
+209233b docs(adr): AC-48 lockout is a fixed 15-minute lock
+b673c69
+
+$ pnpm install --frozen-lockfile
+exit: 0
+✓ Lockfile passes supply-chain policies (verified 10h ago)
+Lockfile is up to date, resolution step is skipped
+Done in 18ms using pnpm v12.18.0
+
+$ pnpm ls next @prisma/client prisma
+exit: 0
+Legend: production dependency, optional only, dev only
+
+room-booking@0.0.0 /Users/kavinpasupathy/Documents/cowork/.claude/worktrees/e001-s01-sign-in-4e4d85 (PRIVATE)
+│
+│   dependencies:
+├── @prisma/client@7.10.1
+├── next@16.4.6
+│
+│   devDependencies:
+└── prisma@7.10.1
+
+3 packages
+
+$ pnpm tsc --noEmit
+exit: 0
+
+
+$ pnpm lint
+exit: 0
+$ eslint .
+
+$ pnpm prisma validate
+exit: 0
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+The schema at prisma/schema.prisma is valid 🚀
+
+$ git diff --exit-code origin/main -- prisma/schema.prisma src/contracts
+exit: 0
+
+
+$ DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm prisma migrate deploy
+exit: 0
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "e001_s14", schema "public" at "127.0.0.1:5434"
+
+2 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+
+$ DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm prisma migrate status
+exit: 0
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "e001_s14", schema "public" at "127.0.0.1:5434"
+
+2 migrations found in prisma/migrations
+
+Database schema is up to date!
+
+$ DATABASE_URL_WEB=$TEST_DATABASE_URL_WEB DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm vitest run tests/integration/contracts
+exit: 0
+
+ RUN  v4.1.12 /Users/kavinpasupathy/Documents/cowork/.claude/worktrees/e001-s01-sign-in-4e4d85
+
+
+ Test Files  2 passed (2)
+      Tests  21 passed (21)
+   Start at  09:12:08
+   Duration  173ms (transform 28ms, setup 0ms, import 69ms, tests 69ms, environment 0ms)
+
+$ DATABASE_URL_WEB=$TEST_DATABASE_URL_WEB DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm exec vitest run
+exit: 0
+
+ RUN  v4.1.12 /Users/kavinpasupathy/Documents/cowork/.claude/worktrees/e001-s01-sign-in-4e4d85
+
+
+ Test Files  40 passed (40)
+      Tests  1087 passed (1087)
+   Start at  09:12:09
+   Duration  1.90s (transform 850ms, setup 0ms, import 3.88s, tests 4.98s, environment 4ms)
+
+$ node scripts/gen-rules-doc.ts --strict && git diff --exit-code docs/rules
+exit: 0
+Wrote 1 rules doc(s) to docs/rules/. Warnings: 0.
+
+$ pnpm docs:all && git diff --exit-code docs/
+exit: 0
+$ pnpm docs:openapi && pnpm docs:rules && pnpm docs:erd
+$ tsx scripts/gen-openapi.ts
+Wrote docs/api/openapi.yaml
+$ node scripts/gen-rules-doc.ts
+Wrote 1 rules doc(s) to docs/rules/. Warnings: 0.
+$ prisma generate --generator markdown
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+
+✔ Generated prisma-markdown (4.0.0) to ./docs/db/erd.md in 9ms
+
+$ bash scripts/ci/check-test-tree.sh
+exit: 0
+PASS check-test-tree: no test files under src/
+
+$ bash scripts/ci/check-fk-index.sh
+exit: 0
+PASS check-fk-index: every foreign key has an index
+
+$ bash scripts/ci/check-no-console.sh
+exit: 0
+PASS check-no-console: no console calls outside logger
+
+$ bash scripts/ci/check-dashes.sh
+exit: 0
+PASS check-dashes: no em or en dashes in docs/ and work/
+
+$ APP_ORIGIN=http://localhost:3000 pnpm build
+exit: 0
+  [90m 9 |[0m ...[36mst[0m { logger } = [36mawait[0m [36mimport[0m([32m'@/lib/logger'[0m);
+  [90m10 |[0m ...[36mst[0m header = request.headers[[32m'x-request-id'[0m];
+  [90m11 |[0m ...[36mst[0m requestId = ([33mArray[0m.isArray(header) ? header[[35m0[0m] : header) ?? [32m'unknown'[0m;
+
+Ecmascript file had an error
+
+
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /account/password
+├ ƒ /api/health
+└ ƒ /sign-in
+
+
+ƒ Proxy (Middleware)
+
+ƒ  (Dynamic)  server-rendered on demand
+
+$ PORT=3101 BASE_URL=http://localhost:3101 APP_ORIGIN=http://localhost:3101 DATABASE_URL_WEB=$TEST_DATABASE_URL_WEB DATABASE_URL_MIGRATOR=$TEST_DATABASE_URL pnpm exec playwright test
+exit: 0
+  ✓  157 [ui-1280] › tests/ui/sign-in.spec.ts:366:3 › /sign-in keyboard and fields › Enter in the password field submits the form (214ms)
+  ✓  154 [ui-1280] › tests/ui/account-password.spec.ts:489:3 › /account/password keyboard and fields › Tab reaches the skip link, the menu, then current password, new password and Save password (644ms)
+  ✓  159 [ui-1280] › tests/ui/sign-in.spec.ts:375:3 › /sign-in keyboard and fields › sets autocomplete on both fields and allows paste (131ms)
+  ✓  153 [ui-375] › tests/ui/account-password.spec.ts:531:3 › PageShell session warning › E-001/AC-71 warns 5 minutes before the end, then asks the user to sign in again (955ms)
+  ✓  161 [ui-375] › tests/ui/account-password.spec.ts:557:3 › PageShell draft keeper › keeps a draft for the same user on the same page (341ms)
+  ✓  160 [ui-1280] › tests/ui/account-password.spec.ts:514:3 › /account/password keyboard and fields › sets autocomplete on both fields and allows paste (616ms)
+  ✓  158 [ui-768] › tests/ui/account-password.spec.ts:557:3 › PageShell draft keeper › keeps a draft for the same user on the same page (968ms)
+  ✓  162 [ui-375] › tests/ui/account-password.spec.ts:568:3 › PageShell draft keeper › clears drafts at sign-out (547ms)
+  ✓  163 [ui-1280] › tests/ui/account-password.spec.ts:531:3 › PageShell session warning › E-001/AC-71 warns 5 minutes before the end, then asks the user to sign in again (895ms)
+  ✓  165 [ui-375] › tests/ui/account-password.spec.ts:585:3 › PageShell draft keeper › clears drafts when another user signs in (772ms)
+  ✓  164 [ui-768] › tests/ui/account-password.spec.ts:568:3 › PageShell draft keeper › clears drafts at sign-out (1.2s)
+  ✓  167 [ui-375] › tests/ui/account-password.spec.ts:601:3 › PageShell draft keeper › never stores a password field (277ms)
+  ✓  166 [ui-1280] › tests/ui/account-password.spec.ts:557:3 › PageShell draft keeper › keeps a draft for the same user on the same page (948ms)
+  ✓  169 [ui-1280] › tests/ui/account-password.spec.ts:568:3 › PageShell draft keeper › clears drafts at sign-out (480ms)
+  ✓  168 [ui-768] › tests/ui/account-password.spec.ts:585:3 › PageShell draft keeper › clears drafts when another user signs in (1.1s)
+  ✓  171 [ui-768] › tests/ui/account-password.spec.ts:601:3 › PageShell draft keeper › never stores a password field (597ms)
+  ✓  170 [ui-1280] › tests/ui/account-password.spec.ts:585:3 › PageShell draft keeper › clears drafts when another user signs in (773ms)
+  ✓  172 [ui-1280] › tests/ui/account-password.spec.ts:601:3 › PageShell draft keeper › never stores a password field (579ms)
+
+  172 passed (32.5s)
+
