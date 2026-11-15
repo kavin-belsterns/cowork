@@ -66,3 +66,18 @@ Found by the E-001/S-02 lead before T-01: `app_web` has no DELETE on `office_hou
 | E-001/S-02 (#4) | In progress | None | Edit not allowed while In progress. S-02 stacks on S-14 under an eng-build override ADR | E-001/AC-54 | None |
 
 Approval: Kavin P, 2026-11-15. Comment posted on each item: yes.
+
+## Impact table: 2026-11-15 AC-48 fixed lockout
+Raised in PR #103 review: S-01 built AC-48 as a sliding window, so the lock can lift before 15 minutes.
+
+| Input item | Touched EARS IDs | Touched stories | Functional effect | NFR effect |
+|---|---|---|---|---|
+| Lock the account for a fixed 15 minutes after the 5th failure in 15 minutes | E-001/AC-48 | E-001/S-01 (Done) | Lock end is the 5th failure time plus 15 minutes; attempts during the lock do not extend it. Copy and `Retry-After` stay true | None |
+
+## Change table: 2026-11-15 AC-48 fixed lockout
+| Item ID | Current status | Action | Reason | EARS IDs | Downstream stories |
+|---|---|---|---|---|---|
+| E-001/S-15 (#111) | (new) | Follow-up item | S-01 is Done, so a follow-up story; never edits the original. Fixed lock matches AC-48 as written (recommended) | E-001/AC-48 | None |
+| E-001/S-01 (#3) | Done | None | Done items are not edited | E-001/AC-48 | E-001/S-15 |
+
+Approval: decided by the lead under delegation from Kavin P, 2026-11-15 (Kavin P: "decision is yours"). Comment posted on each item: yes.
