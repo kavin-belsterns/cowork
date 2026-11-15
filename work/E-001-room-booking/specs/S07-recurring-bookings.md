@@ -13,7 +13,7 @@ owns:
   - tests/integration/series/**
   - tests/ui/bookings-series.spec.ts
   - tests/e2e/E-001/S07-recurring-bookings.spec.ts
-depends_on: [E-001/S-00, E-001/S-06]
+depends_on: [E-001/S-00, E-001/S-06, E-001/S-14]
 parallel: false
 ---
 
