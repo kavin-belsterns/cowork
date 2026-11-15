@@ -1,0 +1,31 @@
+$ pnpm docs:all
+exit: 0
+$ pnpm docs:openapi && pnpm docs:rules && pnpm docs:erd
+$ tsx scripts/gen-openapi.ts
+Wrote docs/api/openapi.yaml
+$ node scripts/gen-rules-doc.ts
+Wrote 1 rules doc(s) to docs/rules/. Warnings: 0.
+$ prisma generate --generator markdown
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+
+✔ Generated prisma-markdown (4.0.0) to ./docs/db/erd.md in 9ms
+
+$ git diff --exit-code docs/
+exit: 0
+
+
+$ node scripts/gen-rules-doc.ts --strict
+exit: 0
+Wrote 1 rules doc(s) to docs/rules/. Warnings: 0.
+
+$ bash scripts/ci/check-dashes.sh
+exit: 0
+PASS check-dashes: no em or en dashes in docs/ and work/
+
+## Files changed
+work/E-001-room-booking/evidence/E001-S14-T06.txt
+
+## Owns check
+No source or doc file changed; only this evidence file.

@@ -47,3 +47,26 @@ Reviewer: bls-engineering:reviewer. Verdict: **Approve**.
 
 ### Lead action
 Approve and commit. Items 1 and 2 carried to "Open review items". Item 1 relayed to the S-02 session for its T-05.
+
+## E-001/S-14/T-06 round 1
+
+Reviewer: bls-engineering:reviewer. Verdict: **Approve**.
+
+| # | Check | Result |
+|---|---|---|
+| 1 | Evidence | pass. 4 commands, all `exit: 0`. |
+| 2 | Owned files | pass. Only the evidence file is new. |
+| 3 | Contract diff | pass. T-06 changes nothing under `prisma/` or `src/contracts/`. |
+| 4 | EARS coverage | n/a |
+| 5 | Standards | pass. `git diff --exit-code docs/` clean; strict rules doc 0 warnings; dashes PASS. |
+| 6 | Overrides | pass. None. |
+
+### Lead action
+Approve and commit.
+
+## Open review items (running list for the PR body)
+| Task | # | File | Issue | Severity |
+|---|---|---|---|---|
+| T-01 | 1 | evidence E001-S14-T01.txt | No `pnpm ls` in the task evidence; it is in the story evidence. | Minor |
+| T-05 | 1 | tests/integration/contracts/web-delete-grants.test.ts | Cites AC-54 and AC-74, so coverage counts them; S-02 and S-07 e2e must name them (S-02 lead confirmed). | Minor |
+| T-05 | 2 | same | Own fixture rows instead of seed (seed has no `booking_series`); same pattern as the S-00 grants test. | Minor |
