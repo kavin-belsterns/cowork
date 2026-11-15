@@ -16,7 +16,7 @@ owns:
   - tests/integration/user/**
   - tests/ui/admin-users.spec.ts
   - tests/e2e/E-001/S03-users-roles.spec.ts
-depends_on: [E-001/S-00, E-001/S-02]
+depends_on: [E-001/S-00, E-001/S-01]
 parallel: true
 ---
 

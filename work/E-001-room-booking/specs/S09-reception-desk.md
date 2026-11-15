@@ -25,7 +25,7 @@ owns:
   - tests/ui/reception.spec.ts
   - tests/ui/reception-badge.spec.ts
   - tests/e2e/E-001/S09-reception-desk.spec.ts
-depends_on: [E-001/S-00, E-001/S-08]
+depends_on: [E-001/S-00, E-001/S-03, E-001/S-08]
 parallel: false
 ---
 

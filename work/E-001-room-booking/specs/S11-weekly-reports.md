@@ -15,7 +15,7 @@ owns:
   - tests/integration/report/**
   - tests/ui/reports.spec.ts
   - tests/e2e/E-001/S11-weekly-reports.spec.ts
-depends_on: [E-001/S-00, E-001/S-06, E-001/S-09]
+depends_on: [E-001/S-00, E-001/S-01]
 parallel: true
 ---
 
