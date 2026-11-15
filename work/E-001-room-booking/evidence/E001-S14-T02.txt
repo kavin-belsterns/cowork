@@ -1,0 +1,1 @@
+None: no data call. S-02 and S-07 write their own deletes.
